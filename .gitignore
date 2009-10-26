@@ -1,0 +1,6 @@
+*.suo
+*.swp
+*.ncb
+*.log
+Debug
+*.vcproj.*.user
