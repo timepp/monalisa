@@ -3,4 +3,8 @@
 *.ncb
 *.log
 Debug
+Release
+ipch
+*.sdf
 *.vcproj.*.user
+*.vcxproj.user
