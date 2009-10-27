@@ -1,4 +1,4 @@
-#include <algorithm>
+ï»¿#include <algorithm>
 #include <string>
 #include <cmath>
 #include <sstream>
@@ -81,14 +81,14 @@ struct node
 	}
 };
 
-// °üÀ¨×ÔÉí
+// åŒ…æ‹¬è‡ªèº«
 int get_op_count(const node* p)
 {
 	if (!p || p->t == nt_num) return 0;
 	return get_op_count(p->l_child) + get_op_count(p->r_child) + 1;
 }
 
-// ¹¹Ôì³õÊ¼ÔËËãÊ÷£¬nÎª²Ù×÷·ûµÄ¸öÊý
+// æž„é€ åˆå§‹è¿ç®—æ ‘ï¼Œnä¸ºæ“ä½œç¬¦çš„ä¸ªæ•°
 node* initial_state(int n)
 {
 	if (n == 0) return new node(nt_num);
@@ -98,8 +98,8 @@ node* initial_state(int n)
 	return p;
 }
 
-// ¹Ç¼ÜÊ÷±äµ½ÏÂÒ»¹Ç¼Ü¡£ËùÓÐ¹Ç¼ÜÊ÷µÄ×ÜÊýÓ¦¸ÃÊÇcatalanÊýC(2n,n)/(n+1)
-// ¶Ô´«Í³24µã£¬n=3£¬¹Ç¼ÜÊ÷¹²ÓÐC(6,3)/4 = 5ÖÖ
+// éª¨æž¶æ ‘å˜åˆ°ä¸‹ä¸€éª¨æž¶ã€‚æ‰€æœ‰éª¨æž¶æ ‘çš„æ€»æ•°åº”è¯¥æ˜¯catalanæ•°C(2n,n)/(n+1)
+// å¯¹ä¼ ç»Ÿ24ç‚¹ï¼Œn=3ï¼Œéª¨æž¶æ ‘å…±æœ‰C(6,3)/4 = 5ç§
 bool go_next_state(node* p)
 {
 	if (!p) return false;
@@ -154,7 +154,7 @@ std::wstring get_exp(const node* p)
 	return lexp + L" " + p->op + L" " + rexp;
 }
 
-// ÔÚÏßÐÔ¿Õ¼ä¶Ô±í´ïÊ½Ê÷Éú³ÉËùÓÐnodeµÄÒýÓÃ£¬·½±ãÎªnodeÃÇ¸³Öµ
+// åœ¨çº¿æ€§ç©ºé—´å¯¹è¡¨è¾¾å¼æ ‘ç”Ÿæˆæ‰€æœ‰nodeçš„å¼•ç”¨ï¼Œæ–¹ä¾¿ä¸ºnodeä»¬èµ‹å€¼
 void get_node_ref(node* p, node*** op_nodes, node*** num_nodes)
 {
 	if (!p) return;
@@ -164,7 +164,7 @@ void get_node_ref(node* p, node*** op_nodes, node*** num_nodes)
 	get_node_ref(p->r_child, op_nodes, num_nodes);
 }
 
-// ÐÎ×´±È½Ï
+// å½¢çŠ¶æ¯”è¾ƒ
 bool shape_less(const node* n1, const node* n2, bool check_num_val = true)
 {
 	if (!n2) return false;
@@ -191,20 +191,20 @@ bool check_bone(const node* p)
 {
 	if (!p || p->t == nt_num) return true;
 
-	// ½»»»ÂÊ£º¹æ¶¨Á½¸ö·ÖÖ§µÄË³Ðò
+	// äº¤æ¢çŽ‡ï¼šè§„å®šä¸¤ä¸ªåˆ†æ”¯çš„é¡ºåº
 	if (exchangable(p->op))
 	{
-		// ²»¿ÉÒÔÔÚÕâÀïÅÐ¶Ï£¬ÔÚcheck_expÊ±¶ÔÂú×ã½»»»ÂÊµÄ×óÓÒ×ÓÊ÷²ÉÓÃÁËÇóÖµµÄ·½·¨£º´óÖµÔÚ×ó
+		// ä¸å¯ä»¥åœ¨è¿™é‡Œåˆ¤æ–­ï¼Œåœ¨check_expæ—¶å¯¹æ»¡è¶³äº¤æ¢çŽ‡çš„å·¦å³å­æ ‘é‡‡ç”¨äº†æ±‚å€¼çš„æ–¹æ³•ï¼šå¤§å€¼åœ¨å·¦
 		// if (shape_less(p->l_child, p->r_child, false)) return false;
 	}
-	// ²»ÄÜ³öÏÖ A-B+C A/B*C£¬Ó¦¸ÃÊÇA+C-B, A*C/B
+	// ä¸èƒ½å‡ºçŽ° A-B+C A/B*Cï¼Œåº”è¯¥æ˜¯A+C-B, A*C/B
 	if (p->l_child->t == nt_op && get_pred(p->op) == get_pred(p->l_child->op))
 	{
 		if (p->op < p->l_child->op) return false;
 	}
 
-	// ½áºÏÂÊ
-	// ²»ÄÜ³öÏÖ A+(B+C), A+(B-C), A-(B+C), A-(B-C)ÕâÑùµÄÇé¿ö£¬³Ë³ýÀàËÆ
+	// ç»“åˆçŽ‡
+	// ä¸èƒ½å‡ºçŽ° A+(B+C), A+(B-C), A-(B+C), A-(B-C)è¿™æ ·çš„æƒ…å†µï¼Œä¹˜é™¤ç±»ä¼¼
 	if (p->r_child->t == nt_op && associative(p->op) && get_pred(p->op) == get_pred(p->r_child->op)) return false;
 
 	if (!check_bone(p->l_child)) return false;
@@ -215,7 +215,7 @@ bool check_bone(const node* p)
 bool check_exp(const node* p)
 {
 	if (!p || p->t == nt_num) return true;
-	// ½»»»ÂÊ£¬ÒÔÏÂÁ½¸öÅÐ¶Ï±£Ö¤ÁËA+B+C+...+ZÕâÖÖÐÎÊ½ÏÂ£¬Ö»Ñ¡ÔñA>B>C>...>ZÕâÒ»ÖÖ×éºÏ
+	// äº¤æ¢çŽ‡ï¼Œä»¥ä¸‹ä¸¤ä¸ªåˆ¤æ–­ä¿è¯äº†A+B+C+...+Zè¿™ç§å½¢å¼ä¸‹ï¼Œåªé€‰æ‹©A>B>C>...>Zè¿™ä¸€ç§ç»„åˆ
 	if (exchangable(p->op))
 	{
 		double v1 = p->l_child->val();
@@ -237,10 +237,10 @@ bool check_exp(const node* p)
 	return true;
 }
 
-// ÔÚÒ»¸ö¹Ì¶¨ÐÎ×´±í´ïÊ½Ê÷ÉÏ½øÐÐËÑË÷
+// åœ¨ä¸€ä¸ªå›ºå®šå½¢çŠ¶è¡¨è¾¾å¼æ ‘ä¸Šè¿›è¡Œæœç´¢
 void calc_on_exptree(node* exp, const wchar_t* ops, int* nums, int num_count, int result)
 {
-	// Ê×ÏÈµÃµ½ËùÓÐ½áµãµÄÏßÐÔÒýÓÃ
+	// é¦–å…ˆå¾—åˆ°æ‰€æœ‰ç»“ç‚¹çš„çº¿æ€§å¼•ç”¨
 	int n = get_op_count(exp);
 	node** op_nodes = new node*[n];
 	node** num_nodes = new node*[n+1];
@@ -249,7 +249,7 @@ void calc_on_exptree(node* exp, const wchar_t* ops, int* nums, int num_count, in
 	node** tmp_numnodes = num_nodes;
 	get_node_ref(exp, &tmp_opnodes, &tmp_numnodes);
 
-	// ±éÀúËùÓÐ²Ù×÷·û×éºÏºÍ²Ù×÷Êý×éºÏ
+	// éåŽ†æ‰€æœ‰æ“ä½œç¬¦ç»„åˆå’Œæ“ä½œæ•°ç»„åˆ
 	int* op_w = new int[n]();
 	int i;
 	for(;;)
@@ -272,7 +272,7 @@ void calc_on_exptree(node* exp, const wchar_t* ops, int* nums, int num_count, in
 				}
 			}while (std::next_permutation(nums, nums + num_count));
 		}
-		// µÝÔöop_w
+		// é€’å¢žop_w
 		for (i = n-1; i >=0; i--) if (op_w[i] < wcslen(ops)-1) break;
 		if (i < 0) break;
 		op_w[i]++;
