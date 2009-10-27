@@ -6,5 +6,6 @@ Debug
 Release
 ipch
 *.sdf
+*.opensdf
 *.vcproj.*.user
 *.vcxproj.user
