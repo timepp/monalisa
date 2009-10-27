@@ -1,0 +1,215 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+<meta name=Generator content="Microsoft Word 14 (filtered)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:宋体;
+	panose-1:2 1 6 0 3 1 1 1 1 1;}
+@font-face
+	{font-family:宋体;
+	panose-1:2 1 6 0 3 1 1 1 1 1;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:"\@宋体";
+	panose-1:2 1 6 0 3 1 1 1 1 1;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	font-size:10.5pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	text-indent:21.0pt;
+	font-size:10.5pt;
+	font-family:"Calibri","sans-serif";}
+p.Code, li.Code, div.Code
+	{mso-style-name:Code;
+	margin:0cm;
+	margin-bottom:.0001pt;
+	background:#F2F2F2;
+	font-size:9.0pt;
+	font-family:宋体;}
+p.msochpdefault, li.msochpdefault, div.msochpdefault
+	{mso-style-name:msochpdefault;
+	margin-right:0cm;
+	margin-left:0cm;
+	font-size:12.0pt;
+	font-family:"Calibri","sans-serif";}
+.MsoChpDefault
+	{font-size:10.0pt;
+	font-family:"Calibri","sans-serif";}
+@page WordSection1
+	{size:595.3pt 841.9pt;
+	margin:72.0pt 90.0pt 72.0pt 90.0pt;
+	layout-grid:15.6pt;}
+div.WordSection1
+	{page:WordSection1;}
+-->
+</style>
+
+</head>
+
+<body lang=ZH-CN link=blue vlink=purple style='text-justify-trim:punctuation'>
+
+<div class=WordSection1 style='layout-grid:15.6pt'>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:14.0pt;color:#0070C0'>cal24
+V1.0 </span><span lang=EN-US><a href="cal24.zip"><span lang=EN-US style='font-family:
+宋体'><span lang=EN-US>下载</span></span></a></span></p>
+
+<p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
+
+<p class=MsoNormal><span lang=EN-US>cal24</span><span style='font-family:宋体'>是一个算</span><span
+style='font-family:宋体'>二十四</span><span style='font-family:宋体'>点的命令行程序，最主要的特点是<span
+style='color:red'>会自动去除重复的表达式</span>。有这样一个小工具在手，当你被人家考到的时候，可以用它来作弊哦</span><span
+lang=EN-US>^O^</span></p>
+
+<p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>关于“自动去除重复的表达式”</span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>举个例子，对于</span><span lang=EN-US>4
+5 7 8</span><span style='font-family:宋体'>算</span><span lang=EN-US>24</span><span
+style='font-family:宋体'>，您可能想知道所有的方法。但是因为</span><span lang=EN-US>4+5+7+8=24</span><span
+style='font-family:宋体'>，他们任意换位都是可以加得</span><span lang=EN-US>24</span><span
+style='font-family:宋体'>的，这样就有</span><span lang=EN-US>4</span><span
+style='font-family:宋体'>！种不同的算式，程序如果全部输出的话，太乱了。这些算式本质上是相同的，但是电脑一般来说不能认识到这一点。那么本质是什么呢？对，是乘法和加法交换率（和结合率），</span><span
+lang=EN-US>cal24</span><span style='font-family:宋体'>可以认识到这一点。用</span><span
+lang=EN-US>cal24</span><span style='font-family:宋体'>来运行：</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#002060'>c:\&gt; cal24 4 5 7 8 24</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0070C0'>8 + 7 + 5 + 4 = 24</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0070C0'>(8 + 5 - 7) * 4 = 24</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0070C0'>(7 + 5) * 8 / 4 = 24</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0070C0'>(8 + 4) * (7 - 5) = 24</span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>其中四个连加的情况只输出其中的一个式子，很清爽吧。</span></p>
+
+<p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
+
+<p class=MsoNormal><b><span style='font-family:宋体'>去重规则</span></b></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>如果您想知道具体的规则，那么下面就是全部（可能有点晕</span><span
+lang=EN-US>~~</span><span style='font-family:宋体'>）</span></p>
+
+<p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
+lang=EN-US style='color:#0070C0'>1.</span><span lang=EN-US style='font-size:
+7.0pt;font-family:"Times New Roman","serif";color:#0070C0'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-family:宋体;color:#0070C0'>（结合率）</span><span
+style='color:#0070C0'> </span><span style='font-family:宋体;color:#0070C0'>算式中不出现</span><span
+lang=EN-US style='color:#0070C0'> A+(B+C) A+(B-C) A-(B+C) A-(B-C)</span><span
+style='font-family:宋体;color:#0070C0'>，乘除法类似</span></p>
+
+<p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
+lang=EN-US style='color:#0070C0'>2.</span><span lang=EN-US style='font-size:
+7.0pt;font-family:"Times New Roman","serif";color:#0070C0'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-family:宋体;color:#0070C0'>（交换率之一）算式中不出现</span><span
+lang=EN-US style='color:#0070C0'> A-B+C (cal24</span><span style='font-family:
+宋体;color:#0070C0'>会选</span><span lang=EN-US style='color:#0070C0'>A+C-B)</span><span
+style='font-family:宋体;color:#0070C0'>，乘除法类似</span></p>
+
+<p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
+lang=EN-US style='color:#0070C0'>3.</span><span lang=EN-US style='font-size:
+7.0pt;font-family:"Times New Roman","serif";color:#0070C0'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-family:宋体;color:#0070C0'>（交换率之二）如果出现</span><span
+lang=EN-US style='color:#0070C0'>A+B,A*B</span><span style='font-family:宋体;
+color:#0070C0'>这样的算式，那么</span><span lang=EN-US style='color:#0070C0'>A&gt;B</span><span
+style='font-family:宋体;color:#0070C0'>，或者</span><span lang=EN-US
+style='color:#0070C0'>A=B</span><span style='font-family:宋体;color:#0070C0'>并且</span><span
+lang=EN-US style='color:#0070C0'>A</span><span style='font-family:宋体;
+color:#0070C0'>的“形状”大于</span><span lang=EN-US style='color:#0070C0'>B</span><span
+style='font-family:宋体;color:#0070C0'>（关于形状大，可以理解为</span><span lang=EN-US
+style='color:#0070C0'>A</span><span style='font-family:宋体;color:#0070C0'>写起来比</span><span
+lang=EN-US style='color:#0070C0'>B</span><span style='font-family:宋体;
+color:#0070C0'>复杂）</span></p>
+
+<p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
+
+<p class=MsoNormal><b><span style='font-family:宋体'>其它功能</span></b></p>
+
+<p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
+lang=EN-US>1.</span><span lang=EN-US style='font-size:7.0pt;font-family:"Times New Roman","serif"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-family:宋体'>可以算其它任意数字，在命令行最后一个参数指定。</span></p>
+
+<p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
+lang=EN-US>2.</span><span lang=EN-US style='font-size:7.0pt;font-family:"Times New Roman","serif"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-family:宋体'>使用</span><span lang=EN-US>-p</span><span
+style='font-family:宋体'>参数指定参与运算的运算符集合。可选的有加，减，乘，除，乘方</span></p>
+
+<p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
+lang=EN-US>3.</span><span lang=EN-US style='font-size:7.0pt;font-family:"Times New Roman","serif"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-family:宋体'>支持任意多的运算数字，但是一般来说如果数字不重复的话，</span><span
+lang=EN-US>8</span><span style='font-family:宋体'>个数字以上就很慢了。如果数字重复度比较高，那么还可以更多一点。</span></p>
+
+<p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
+
+<p class=MsoNormal><b><span style='font-family:宋体'>用法：</span></b></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>usage:
+cal24 [options] num num [...] result</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>options:</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
+-p&nbsp; --opset&nbsp;&nbsp; set operator set to use. the full set is
+&quot;+-*/^&quot;</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+the default set is &quot;+-*/&quot;</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
+-h&nbsp; --help&nbsp;&nbsp;&nbsp; show help</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>举例</span><span lang=EN-US
+style='font-family:"Courier New"'>:</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
+cal24 6 7 9 9 &nbsp;24</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
+cal24 1 2 3 4 5 6 7 100</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
+cal24 --opset=+* 2 2 4</span></p>
+
+<p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
+
+<p class=MsoNormal><b><span style='font-family:宋体'>版本历史</span></b></p>
+
+<p class=MsoNormal><span lang=EN-US>2009-10-27 </span><span style='font-family:
+宋体'>初始版本</span></p>
+
+</div>
+
+</body>
+
+</html>
