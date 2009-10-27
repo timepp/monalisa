@@ -72,13 +72,12 @@ div.WordSection1
 <div class=WordSection1 style='layout-grid:15.6pt'>
 
 <p class=MsoNormal><span lang=EN-US style='font-size:14.0pt;color:#0070C0'>cal24
-V1.0 </span><span lang=EN-US><a href="cal24.zip"><span lang=EN-US style='font-family:
-宋体'><span lang=EN-US>下载</span></span></a></span></p>
+V1.0 </span><span lang=EN-US><a href="cal24.zip"><span lang=EN-US
+style='font-family:宋体'><span lang=EN-US>下载</span></span></a></span></p>
 
 <p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
 
-<p class=MsoNormal><span lang=EN-US>cal24</span><span style='font-family:宋体'>是一个算</span><span
-style='font-family:宋体'>二十四</span><span style='font-family:宋体'>点的命令行程序，最主要的特点是<span
+<p class=MsoNormal><span lang=EN-US>cal24</span><span style='font-family:宋体'>是一个算二十四点的命令行程序，最主要的特点是<span
 style='color:red'>会自动去除重复的表达式</span>。有这样一个小工具在手，当你被人家考到的时候，可以用它来作弊哦</span><span
 lang=EN-US>^O^</span></p>
 
@@ -168,6 +167,10 @@ lang=EN-US>3.</span><span lang=EN-US style='font-size:7.0pt;font-family:"Times N
 </span><span style='font-family:宋体'>支持任意多的运算数字，但是一般来说如果数字不重复的话，</span><span
 lang=EN-US>8</span><span style='font-family:宋体'>个数字以上就很慢了。如果数字重复度比较高，那么还可以更多一点。</span></p>
 
+<p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
+lang=EN-US>4.</span><span lang=EN-US style='font-size:7.0pt;font-family:"Times New Roman","serif"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span
+style='font-family:宋体'>可指定去重级别，调整表达式的输出数量。</span></p>
+
 <p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
 
 <p class=MsoNormal><b><span style='font-family:宋体'>用法：</span></b></p>
@@ -177,15 +180,32 @@ cal24 [options] num num [...] result</span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>options:</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
--p&nbsp; --opset&nbsp;&nbsp; set operator set to use. the full set is
-&quot;+-*/^&quot;</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'> 
+-p,--opset   set operator set to use. the full set is &quot;+-*/^&quot;</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-the default set is &quot;+-*/&quot;</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>                the
+default set is &quot;+-*/&quot;</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
--h&nbsp; --help&nbsp;&nbsp;&nbsp; show help</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'> 
+-r,--rrlvl   redundant removal level, larger value = cleaner output</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>              
+level 0: no redundant removal</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>              
+level 1: the default level, remove equivalents under</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>                       
+the 'exchang' and 'assciation' translations</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>              
+level 2: remove '/1' and '-0'. for example,</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>                       
+'4-0', '6*7/1', '(4+5)/(9-8)' would be removed</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'> 
+-h,--help    show help</span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;</span></p>
 
@@ -207,6 +227,9 @@ cal24 --opset=+* 2 2 4</span></p>
 
 <p class=MsoNormal><span lang=EN-US>2009-10-27 </span><span style='font-family:
 宋体'>初始版本</span></p>
+
+<p class=MsoNormal><span lang=EN-US>2009-10-27  </span><span style='font-family:
+宋体'>增加</span><span lang=EN-US>rrlvl</span><span style='font-family:宋体'>选择，用以控制去重策略</span></p>
 
 </div>
 
