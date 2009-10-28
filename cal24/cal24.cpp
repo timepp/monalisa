@@ -21,11 +21,11 @@ int get_pred(wchar_t op)
 
 bool exchangable(wchar_t op)
 {
-	return op == '+' || op == '*' || op == '_';
+	return op == '+' || op == '*';
 }
 bool associative(wchar_t op)
 {
-	return op == '+' || op == '-' || op == '*' || op == '/' || op == '_';
+	return op == '+' || op == '-' || op == '*' || op == '/';
 }
 
 bool double_equ(double a, double b)
@@ -71,10 +71,7 @@ struct node
 			case '*': return l_child->val() * r_child->val();
 			case '/': return l_child->val() / r_child->val();
 			case '^': return pow(l_child->val(), r_child->val());
-			case '_': 
-				int l = static_cast<int>(l_child->val());
-				int r = static_cast<int>(r_child->val());
-
+			case '_': return l_child->val() * 10 + r_child->val();
 			}
 		}
 		return 0;
@@ -151,7 +148,10 @@ std::wstring get_exp(const node* p)
 		rexp = std::wstring(L"(") + rexp + L")";
 	}
 	
-	return lexp + L" " + p->op + L" " + rexp;
+	if (p->op == L'_') 
+		return lexp + rexp;
+	else 
+		return lexp + L" " + p->op + L" " + rexp;
 }
 
 // 在线性空间对表达式树生成所有node的引用，方便为node们赋值
@@ -190,6 +190,13 @@ bool shape_less(const node* n1, const node* n2, bool check_num_val = true)
 bool check_bone(const node* p, int rr_level)
 {
 	if (!p || p->t == nt_num) return true;
+
+	// '_'是连字符，要求右孩子是数，左孩子是数或者也是个'_'
+	if (p->op == L'_')
+	{
+		if (p->r_child->t == nt_op) return false;
+		if (p->l_child->t == nt_op && p->l_child->op != L'_') return false;
+	}
 
 	if (rr_level >= 1)
 	{
@@ -269,7 +276,6 @@ void calc_on_exptree(node* exp, const wchar_t* ops, int* nums, int num_count, in
 	for(;;)
 	{
 		for (i = 0; i < n; i++) op_nodes[i]->op = ops[op_w[i]];
-		//std::wcout << get_exp(exp) << std::endl;
 		if (check_bone(exp, rr_level))
 		{
 			std::sort(nums, nums + num_count);
@@ -278,7 +284,6 @@ void calc_on_exptree(node* exp, const wchar_t* ops, int* nums, int num_count, in
 				for (i = 0; i < num_count; i++) num_nodes[i]->num = nums[i];
 				if (check_exp(exp, rr_level))
 				{
-					//std::wcout << get_exp(exp) << std::endl;
 					if (double_equ(exp->val(), result))
 					{
 						std::wcout << get_exp(exp) << " = " << result << std::endl;
@@ -303,8 +308,9 @@ void usage()
 	std::wcout << 
 		"usage: cal24 [options] num num [...] result\n"
 		"options: \n"
-		"  -p,--opset   set operator set to use. the full set is \"+-*/^\"\n"
-		"                the default set is \"+-*/\"\n"
+		"  -p,--opset   set operator set to use. the full set is \"+-*/^_\"\n"
+		"               the default set is \"+-*/\"\n"
+		"               use '-p all' to use all op set\n"
 		"  -r,--rrlvl   redundant removal level, larger value = cleaner output\n"
 		"               level 0: no redundant removal \n"
 		"               level 1: the default level, remove equivalents under\n"
@@ -317,6 +323,7 @@ void usage()
 		"  cal24 5 5 5 1 24\n"
 		"  cal24 1 2 3 4 5 6 100\n"
 		"  cal24 --opset=\"+-*/^\" 1 2 3 4 82\n"
+		"  cal24 1 2 3 4 24 -r 2 -p \"+-*/_\""
 		"\n"
 		"any bugs, please report to timepp@126.com\n"
 		;
@@ -325,6 +332,7 @@ void usage()
 int wmain(int argc, wchar_t* argv[])
 {
 	std::wstring op_set = L"+-*/";
+	std::wstring op_set_all = L"+-*/^_";
 	bool show_help = false;
 	int rr_level = 1;
 	tp::cmdline_parser parser;
@@ -341,6 +349,7 @@ int wmain(int argc, wchar_t* argv[])
 		usage();
 		return 0;
 	}
+	if (op_set == L"all") op_set = op_set_all;
 
 	size_t c = parser.get_target_connt();
 	if (c < 3)
