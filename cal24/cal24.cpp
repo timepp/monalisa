@@ -3,7 +3,15 @@
 #include <cmath>
 #include <sstream>
 #include <iostream>
+#include <list>
 #include "../timepp_lib/include/cmdlineparser.h"
+
+double calc_frac(double n)
+{
+	double ret = 1;
+	for (double i = 2; i <= n; i++) ret *= i;
+	return ret;
+}
 
 int get_pred(wchar_t op)
 {
@@ -41,6 +49,7 @@ struct node
 	node* r_child;
 	nodetype t;
 	wchar_t op;
+	std::wstring translist;
 	double num;
 
 	explicit node(nodetype type, wchar_t op = '+', int num = 0)
@@ -49,6 +58,7 @@ struct node
 		l_child = r_child = 0;
 		this->op = op;
 		this->num = num;
+		translist.reserve(10);
 	}
 	~node()
 	{
@@ -60,7 +70,15 @@ struct node
 	{
 		if (t == nt_num)
 		{
-			return num;
+			double ret = num;
+			for (size_t i = 0; i < translist.size(); i++)
+			{
+				switch (translist[i])
+				{
+				case '!': ret = calc_frac(ret); break;
+				}
+			}
+			return ret;
 		}
 		else
 		{
@@ -77,6 +95,13 @@ struct node
 		return 0;
 	}
 };
+
+struct uti // unary translation info
+{
+	wchar_t op; // 一元操作符
+	int at_ub;  // 最多的应用次数
+};
+typedef std::list<uti> uti_list_t;
 
 // 包括自身
 int get_op_count(const node* p)
@@ -127,6 +152,28 @@ bool go_next_state(node* p)
 	return false;
 }
 
+std::wstring get_trans(const node* p, const std::wstring& exp)
+{
+	std::wstring ret = exp;
+	for (size_t i = 0; i < p->translist.size(); i++)
+	{
+		switch (p->translist[i])
+		{
+		case '!':
+			if (p->t == nt_num && i == 0)
+			{
+				ret += p->translist[i];
+			}
+			else
+			{
+				ret = std::wstring(L"(") + ret + std::wstring(L")") + p->translist[i];
+			}
+			break;
+		}
+	}
+	return ret;
+}
+
 std::wstring get_exp(const node* p)
 {
 	if (!p) return L"";
@@ -134,7 +181,7 @@ std::wstring get_exp(const node* p)
 	{
 		std::wostringstream oss;
 		oss << p->num;
-		return oss.str();
+		return get_trans(p, oss.str());
 	}
 	std::wstring lexp = get_exp(p->l_child);
 	std::wstring rexp = get_exp(p->r_child);
@@ -148,10 +195,12 @@ std::wstring get_exp(const node* p)
 		rexp = std::wstring(L"(") + rexp + L")";
 	}
 	
+	std::wstring e;
 	if (p->op == L'_') 
-		return lexp + rexp;
+		e = lexp + rexp;
 	else 
-		return lexp + L" " + p->op + L" " + rexp;
+		e = lexp + L" " + p->op + L" " + rexp;
+	return get_trans(p, e);
 }
 
 // 在线性空间对表达式树生成所有node的引用，方便为node们赋值
@@ -196,6 +245,8 @@ bool check_bone(const node* p, int rr_level)
 	{
 		if (p->r_child->t == nt_op) return false;
 		if (p->l_child->t == nt_op && p->l_child->op != L'_') return false;
+		if (p->l_child->t == nt_num && p->l_child->translist.size() > 0) return false;
+		if (p->r_child->t == nt_num && p->r_child->translist.size() > 0) return false;
 	}
 
 	if (rr_level >= 1)
@@ -258,8 +309,23 @@ bool check_exp(const node* p, int rr_level)
 	return true;
 }
 
+void iterate_num_permutation(node* exp, node** num_nodes, int* nums, int num_count, int result, int rr_level)
+{
+	do
+	{
+		for (int i = 0; i < num_count; i++) num_nodes[i]->num = nums[i];
+		if (check_exp(exp, rr_level))
+		{
+			if (double_equ(exp->val(), result))
+			{
+				std::wcout << get_exp(exp) << " = " << result << std::endl;
+			}
+		}
+	}while (std::next_permutation(nums, nums + num_count));
+}
+
 // 在一个固定形状表达式树上进行搜索
-void calc_on_exptree(node* exp, const wchar_t* ops, int* nums, int num_count, int result, int rr_level)
+void calc_on_exptree(node* exp, const wchar_t* ops, const uti_list_t& uop, int* nums, int num_count, int result, int rr_level)
 {
 	// 首先得到所有结点的线性引用
 	int n = get_op_count(exp);
@@ -270,6 +336,8 @@ void calc_on_exptree(node* exp, const wchar_t* ops, int* nums, int num_count, in
 	node** tmp_numnodes = num_nodes;
 	get_node_ref(exp, &tmp_opnodes, &tmp_numnodes);
 
+	std::sort(nums, nums + num_count);
+
 	// 遍历所有操作符组合和操作数组合
 	int* op_w = new int[n]();
 	int i;
@@ -278,19 +346,16 @@ void calc_on_exptree(node* exp, const wchar_t* ops, int* nums, int num_count, in
 		for (i = 0; i < n; i++) op_nodes[i]->op = ops[op_w[i]];
 		if (check_bone(exp, rr_level))
 		{
-			std::sort(nums, nums + num_count);
-			do
+			if (uop.size() == 0)
 			{
-				for (i = 0; i < num_count; i++) num_nodes[i]->num = nums[i];
-				if (check_exp(exp, rr_level))
-				{
-					if (double_equ(exp->val(), result))
-					{
-						std::wcout << get_exp(exp) << " = " << result << std::endl;
-					}
-				}
-			}while (std::next_permutation(nums, nums + num_count));
+				iterate_num_permutation(exp, num_nodes, nums, num_count, result, rr_level);
+			}
+			else
+			{
+				
+			}
 		}
+
 		// 递增op_w
 		for (i = n-1; i >=0; i--) if (op_w[i] < wcslen(ops)-1) break;
 		if (i < 0) break;
@@ -333,6 +398,8 @@ int wmain(int argc, wchar_t* argv[])
 {
 	std::wstring op_set = L"+-*/";
 	std::wstring op_set_all = L"+-*/^_";
+	std::wstring all_bop = L"+-*/^_";
+	std::wstring all_uop = L"!";
 	bool show_help = false;
 	int rr_level = 1;
 	tp::cmdline_parser parser;
@@ -358,6 +425,26 @@ int wmain(int argc, wchar_t* argv[])
 		return 1;
 	}
 
+	// op_set -> bop+uop
+	std::wstring bop;
+	uti_list_t uop;
+	for (size_t i = 0; i < op_set.size(); i++)
+	{
+		if (all_bop.find(op_set[i]) >= 0 )
+		{
+			bop += op_set[i];
+		}
+		else if (all_uop.find(op_set[i]) >= 0)
+		{
+			uti u = {op_set[i], 0};
+			for (; op_set[i] >= '0' && op_set[i] <= '9'; i++)
+			{
+				u.at_ub = u.at_ub * 10 + op_set[i] - '0';
+			}
+			uop.push_back(u);
+		}
+	}
+
 	int d = _wtoi(parser.get_target(c-1).c_str());
 	size_t num_count = c-1;
 	int* nums = new int[num_count];
@@ -369,7 +456,7 @@ int wmain(int argc, wchar_t* argv[])
 	node* p = initial_state(num_count-1);
 	do
 	{
-		calc_on_exptree(p, op_set.c_str(), nums, num_count, d, rr_level);
+		calc_on_exptree(p, bop.c_str(), uop, nums, num_count, d, rr_level);
 	}while (go_next_state(p));
 
 	delete p;
