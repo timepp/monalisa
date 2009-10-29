@@ -3,14 +3,41 @@
 #include <cmath>
 #include <sstream>
 #include <iostream>
+#include <numeric>
 #include <list>
 #include "../timepp_lib/include/cmdlineparser.h"
 
+bool double_equ(double a, double b)
+{
+	return std::fabs(a - b) < 1E-6;
+}
+
 double calc_frac(double n)
 {
+	if (n < 3 || n > 20 || !double_equ(n, (int)n))
+	{
+		return std::numeric_limits<double>::quiet_NaN();
+	}
+
 	double ret = 1;
 	for (double i = 2; i <= n; i++) ret *= i;
 	return ret;
+}
+
+bool next_n_hex_number(int* b, int* e, int n)
+{
+	int *p;
+	for (p = e-1; p >= b; p--) 
+	{
+		if (*p < n-1) break;
+	}
+	for (int* q = p+1; q < e; q++) *q = 0;
+	if (p >= b)
+	{
+		(*p)++;
+		return true;
+	}
+	return false;
 }
 
 int get_pred(wchar_t op)
@@ -36,10 +63,7 @@ bool associative(wchar_t op)
 	return op == '+' || op == '-' || op == '*' || op == '/';
 }
 
-bool double_equ(double a, double b)
-{
-	return std::fabs(a - b) < 1E-6;
-}
+
 
 
 enum nodetype {nt_op, nt_num};
@@ -68,31 +92,32 @@ struct node
 
 	double val() const
 	{
+		double ret = 0;
 		if (t == nt_num)
 		{
-			double ret = num;
-			for (size_t i = 0; i < translist.size(); i++)
-			{
-				switch (translist[i])
-				{
-				case '!': ret = calc_frac(ret); break;
-				}
-			}
-			return ret;
+			ret = num;
 		}
 		else
 		{
 			switch (op)
 			{
-			case '+': return l_child->val() + r_child->val();
-			case '-': return l_child->val() - r_child->val();
-			case '*': return l_child->val() * r_child->val();
-			case '/': return l_child->val() / r_child->val();
-			case '^': return pow(l_child->val(), r_child->val());
-			case '_': return l_child->val() * 10 + r_child->val();
+			case '+': ret = l_child->val() + r_child->val(); break;
+			case '-': ret = l_child->val() - r_child->val(); break;
+			case '*': ret = l_child->val() * r_child->val(); break;
+			case '/': ret = l_child->val() / r_child->val(); break;
+			case '^': ret = pow(l_child->val(), r_child->val()); break;
+			case '_': ret = l_child->val() * 10 + r_child->val(); break;
 			}
 		}
-		return 0;
+		
+		for (size_t i = 0; i < translist.size(); i++)
+		{
+			switch (translist[i])
+			{
+			case '!': ret = calc_frac(ret); break;
+			}
+		}
+		return ret;
 	}
 };
 
@@ -316,6 +341,7 @@ void iterate_num_permutation(node* exp, node** num_nodes, int* nums, int num_cou
 		for (int i = 0; i < num_count; i++) num_nodes[i]->num = nums[i];
 		if (check_exp(exp, rr_level))
 		{
+		//	std::wcout << get_exp(exp) << " = " << exp->val() << std::endl;
 			if (double_equ(exp->val(), result))
 			{
 				std::wcout << get_exp(exp) << " = " << result << std::endl;
@@ -325,7 +351,7 @@ void iterate_num_permutation(node* exp, node** num_nodes, int* nums, int num_cou
 }
 
 // 在一个固定形状表达式树上进行搜索
-void calc_on_exptree(node* exp, const wchar_t* ops, const uti_list_t& uop, int* nums, int num_count, int result, int rr_level)
+void calc_on_exptree(node* exp, const wchar_t* bop, const uti_list_t& uop, int* nums, int num_count, int result, int rr_level)
 {
 	// 首先得到所有结点的线性引用
 	int n = get_op_count(exp);
@@ -338,12 +364,17 @@ void calc_on_exptree(node* exp, const wchar_t* ops, const uti_list_t& uop, int* 
 
 	std::sort(nums, nums + num_count);
 
+	size_t oup_count = 1;
+	for (uti_list_t::const_iterator it = uop.begin(); it != uop.end(); ++it) oup_count *= (it->at_ub+1);
+
 	// 遍历所有操作符组合和操作数组合
 	int* op_w = new int[n]();
+	int* uop_w = new int[2*n+1]();
+	size_t boplen = wcslen(bop);
 	int i;
-	for(;;)
+	do
 	{
-		for (i = 0; i < n; i++) op_nodes[i]->op = ops[op_w[i]];
+		for (i = 0; i < n; i++) op_nodes[i]->op = bop[op_w[i]];
 		if (check_bone(exp, rr_level))
 		{
 			if (uop.size() == 0)
@@ -352,16 +383,26 @@ void calc_on_exptree(node* exp, const wchar_t* ops, const uti_list_t& uop, int* 
 			}
 			else
 			{
-				
+				do
+				{
+					// 为每个结点分uop
+					for (i = 0; i < n*2 + 1; i++)
+					{
+						node* p = (i < n)? op_nodes[i] : num_nodes[i - n];
+						int pattern = uop_w[i];
+						p->translist.clear();
+						for (uti_list_t::const_iterator it = uop.begin(); it != uop.end(); ++it)
+						{
+							int c = pattern % (it->at_ub+1);
+							pattern /= (it->at_ub+1);
+							p->translist.append(c, it->op);
+						}
+					}
+					iterate_num_permutation(exp, num_nodes, nums, num_count, result, rr_level);
+				} while (next_n_hex_number(uop_w, uop_w + 2*n + 1, oup_count));
 			}
 		}
-
-		// 递增op_w
-		for (i = n-1; i >=0; i--) if (op_w[i] < wcslen(ops)-1) break;
-		if (i < 0) break;
-		op_w[i]++;
-		for (i++; i < n; i++) op_w[i] = 0;
-	}
+	} while (next_n_hex_number(op_w, op_w + n, boplen));
 
 	delete [] op_w;
 	delete [] op_nodes;
@@ -396,6 +437,8 @@ void usage()
 
 int wmain(int argc, wchar_t* argv[])
 {
+	int a[10] = {0};
+
 	std::wstring op_set = L"+-*/";
 	std::wstring op_set_all = L"+-*/^_";
 	std::wstring all_bop = L"+-*/^_";
@@ -430,17 +473,18 @@ int wmain(int argc, wchar_t* argv[])
 	uti_list_t uop;
 	for (size_t i = 0; i < op_set.size(); i++)
 	{
-		if (all_bop.find(op_set[i]) >= 0 )
+		if (all_bop.find(op_set[i]) != std::wstring::npos )
 		{
 			bop += op_set[i];
 		}
-		else if (all_uop.find(op_set[i]) >= 0)
+		else if (all_uop.find(op_set[i]) != std::wstring::npos)
 		{
 			uti u = {op_set[i], 0};
 			for (; op_set[i] >= '0' && op_set[i] <= '9'; i++)
 			{
 				u.at_ub = u.at_ub * 10 + op_set[i] - '0';
 			}
+			if (u.at_ub == 0) u.at_ub = 1;
 			uop.push_back(u);
 		}
 	}
