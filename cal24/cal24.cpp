@@ -270,8 +270,6 @@ bool check_bone(const node* p, int rr_level)
 	{
 		if (p->r_child->t == nt_op) return false;
 		if (p->l_child->t == nt_op && p->l_child->op != L'_') return false;
-		if (p->l_child->t == nt_num && p->l_child->translist.size() > 0) return false;
-		if (p->r_child->t == nt_num && p->r_child->translist.size() > 0) return false;
 	}
 
 	if (rr_level >= 1)
@@ -296,6 +294,22 @@ bool check_bone(const node* p, int rr_level)
 
 	if (!check_bone(p->l_child, rr_level)) return false;
 	if (!check_bone(p->r_child, rr_level)) return false;
+	return true;
+}
+
+// 这个是在分配好一元操作符之后调用
+bool check_bone2(const node* p, int rr_level)
+{
+	if (!p || p->t == nt_num) return true;
+	
+	if (p->op == L'_')
+	{
+		if (p->l_child->t == nt_num && p->l_child->translist.size() > 0) return false;
+		if (p->r_child->t == nt_num && p->r_child->translist.size() > 0) return false;
+	}
+
+	if (!check_bone2(p->l_child, rr_level)) return false;
+	if (!check_bone2(p->r_child, rr_level)) return false;
 	return true;
 }
 
@@ -377,30 +391,26 @@ void calc_on_exptree(node* exp, const wchar_t* bop, const uti_list_t& uop, int* 
 		for (i = 0; i < n; i++) op_nodes[i]->op = bop[op_w[i]];
 		if (check_bone(exp, rr_level))
 		{
-			if (uop.size() == 0)
+			do
 			{
-				iterate_num_permutation(exp, num_nodes, nums, num_count, result, rr_level);
-			}
-			else
-			{
-				do
+				// 为每个结点分uop
+				for (i = 0; i < n*2 + 1; i++)
 				{
-					// 为每个结点分uop
-					for (i = 0; i < n*2 + 1; i++)
+					node* p = (i < n)? op_nodes[i] : num_nodes[i - n];
+					int pattern = uop_w[i];
+					p->translist.clear();
+					for (uti_list_t::const_iterator it = uop.begin(); it != uop.end(); ++it)
 					{
-						node* p = (i < n)? op_nodes[i] : num_nodes[i - n];
-						int pattern = uop_w[i];
-						p->translist.clear();
-						for (uti_list_t::const_iterator it = uop.begin(); it != uop.end(); ++it)
-						{
-							int c = pattern % (it->at_ub+1);
-							pattern /= (it->at_ub+1);
-							p->translist.append(c, it->op);
-						}
+						int c = pattern % (it->at_ub+1);
+						pattern /= (it->at_ub+1);
+						p->translist.append(c, it->op);
 					}
+				}
+				if (check_bone2(exp, rr_level))
+				{
 					iterate_num_permutation(exp, num_nodes, nums, num_count, result, rr_level);
-				} while (next_n_hex_number(uop_w, uop_w + 2*n + 1, oup_count));
-			}
+				}
+			} while (next_n_hex_number(uop_w, uop_w + 2*n + 1, oup_count));
 		}
 	} while (next_n_hex_number(op_w, op_w + n, boplen));
 
@@ -437,8 +447,6 @@ void usage()
 
 int wmain(int argc, wchar_t* argv[])
 {
-	int a[10] = {0};
-
 	std::wstring op_set = L"+-*/";
 	std::wstring op_set_all = L"+-*/^_";
 	std::wstring all_bop = L"+-*/^_";
@@ -480,12 +488,17 @@ int wmain(int argc, wchar_t* argv[])
 		else if (all_uop.find(op_set[i]) != std::wstring::npos)
 		{
 			uti u = {op_set[i], 0};
-			for (; op_set[i] >= '0' && op_set[i] <= '9'; i++)
+			for (i++; op_set[i] >= '0' && op_set[i] <= '9'; i++)
 			{
 				u.at_ub = u.at_ub * 10 + op_set[i] - '0';
 			}
 			if (u.at_ub == 0) u.at_ub = 1;
 			uop.push_back(u);
+		}
+		else
+		{
+			std::wcout << op_set[i] << L" is not a valid operator, run 'cal24 --help' to see valid operators" << std::endl;
+			return -2;
 		}
 	}
 
