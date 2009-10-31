@@ -7,9 +7,11 @@
 #include <list>
 #include "../timepp_lib/include/cmdlineparser.h"
 
+static bool g_debug = false;
+
 bool double_equ(double a, double b)
 {
-	return std::fabs(a - b) < 1E-6;
+	return std::fabs(a - b) < 1E-10;
 }
 
 double calc_frac(double n)
@@ -304,8 +306,18 @@ bool check_bone2(const node* p, int rr_level)
 	
 	if (p->op == L'_')
 	{
-		if (p->l_child->t == nt_num && p->l_child->translist.size() > 0) return false;
-		if (p->r_child->t == nt_num && p->r_child->translist.size() > 0) return false;
+		if (p->l_child->t == nt_num)
+		{
+			if (p->l_child->translist.size() > 0) return false;
+			int ival = (int)floor(p->l_child->num + 0.5);
+			if (ival < 0 || ival > 9 || !double_equ(p->l_child->num, ival)) return false;
+		}
+		if (p->r_child->t == nt_num)
+		{
+			if (p->r_child->translist.size() > 0) return false;
+			int ival = (int)floor(p->r_child->num + 0.5);
+			if (ival < 0 || ival > 9 || !double_equ(p->r_child->num, ival)) return false;
+		}
 	}
 
 	if (!check_bone2(p->l_child, rr_level)) return false;
@@ -348,14 +360,17 @@ bool check_exp(const node* p, int rr_level)
 	return true;
 }
 
-void iterate_num_permutation(node* exp, node** num_nodes, int* nums, int num_count, int result, int rr_level)
+void iterate_num_permutation(node* exp, node** num_nodes, double* nums, int num_count, double result, int rr_level)
 {
 	do
 	{
 		for (int i = 0; i < num_count; i++) num_nodes[i]->num = nums[i];
 		if (check_exp(exp, rr_level))
 		{
-		//	std::wcout << get_exp(exp) << " = " << exp->val() << std::endl;
+			if (g_debug)
+			{
+		    	std::wcout << get_exp(exp) << " = " << exp->val() << std::endl;
+			}
 			if (double_equ(exp->val(), result))
 			{
 				std::wcout << get_exp(exp) << " = " << result << std::endl;
@@ -365,7 +380,7 @@ void iterate_num_permutation(node* exp, node** num_nodes, int* nums, int num_cou
 }
 
 // 在一个固定形状表达式树上进行搜索
-void calc_on_exptree(node* exp, const wchar_t* bop, const uti_list_t& uop, int* nums, int num_count, int result, int rr_level)
+void calc_on_exptree(node* exp, const wchar_t* bop, const uti_list_t& uop, double* nums, int num_count, double result, int rr_level)
 {
 	// 首先得到所有结点的线性引用
 	int n = get_op_count(exp);
@@ -461,6 +476,7 @@ int wmain(int argc, wchar_t* argv[])
 	parser.add_option(L'p', L"opset", &op_set, true, &tp::cmdline_parser::cf_string);
 	parser.add_option(L'h', L"help", &show_help, false, &tp::cmdline_parser::cf_bool);
 	parser.add_option(L'r', L"rrlvl", &rr_level, true, &tp::cmdline_parser::cf_int);
+	parser.add_option(0, L"debug", &g_debug, false, &tp::cmdline_parser::cf_bool);
 	if (!parser.parse(argc, argv))
 	{
 		usage();
@@ -506,12 +522,12 @@ int wmain(int argc, wchar_t* argv[])
 		}
 	}
 
-	int d = _wtoi(parser.get_target(c-1).c_str());
+	double d = _wtof(parser.get_target(c-1).c_str());
 	size_t num_count = c-1;
-	int* nums = new int[num_count];
+	double* nums = new double[num_count];
 	for (size_t i = 0; i < num_count; i++)
 	{
-		nums[i] = _wtoi(parser.get_target(i).c_str());
+		nums[i] = _wtof(parser.get_target(i).c_str());
 	}
 
 	node* p = initial_state(num_count-1);
