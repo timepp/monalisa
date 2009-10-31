@@ -424,22 +424,26 @@ void usage()
 	std::wcout << 
 		"usage: cal24 [options] num num [...] result\n"
 		"options: \n"
-		"  -p,--opset   set operator set to use. the full set is \"+-*/^_\"\n"
-		"               the default set is \"+-*/\"\n"
-		"               use '-p all' to use all op set\n"
-		"  -r,--rrlvl   redundant removal level, larger value = cleaner output\n"
-		"               level 0: no redundant removal \n"
-		"               level 1: the default level, remove equivalents under\n"
-		"                        the 'exchang' and 'assciation' translations\n"
-		"               level 2: remove '/1' and '-0'. for example,\n"
-		"                        '4-0', '6*7/1', '(4+5)/(9-8)' would be removed\n"
+		"  -p,--opset\n"
+		"      operator set to use. default: +-*/\n"
+		"      '-p all' to use the full set: +-*/^_!.\n"
+		"      '_' means concat 2 oprands as one decimal number.  e.g. 3_5 <=> 35.\n"
+		"      a number can follow '!' to specify max apply times when it's used.\n"
+		"  -r,--rrlvl\n"
+		"      redundant removal level. default: 1\n"
+		"      0: no redundant removal \n"
+		"      1: remove equivalents under the commulative and associative property\n"
+		"         for example, '1+2' would be removed, yet '2+1' be selected\n"
+		"      2: also remove '/1' and '-0'. \n"
+		"         for example, '4-0', '6*7/1', '(4+5)/(9-8)' would be removed\n"
 		"  -h,--help    show help\n"
 		"\n"
 		"examples: \n"
 		"  cal24 5 5 5 1 24\n"
 		"  cal24 1 2 3 4 5 6 100\n"
-		"  cal24 --opset=\"+-*/^\" 1 2 3 4 82\n"
-		"  cal24 1 2 3 4 24 -r 2 -p \"+-*/_\""
+		"  cal24 4 1 25 -p \"+!\"\n"
+		"  cal24 --opset=\"+-*/^!2\" 1 2 3 4 89\n"
+		"  cal24 1 2 3 4 24 -r 2 -p \"+-*/_\"\n"
 		"\n"
 		"any bugs, please report to timepp@126.com\n"
 		;
@@ -448,11 +452,11 @@ void usage()
 int wmain(int argc, wchar_t* argv[])
 {
 	std::wstring op_set = L"+-*/";
-	std::wstring op_set_all = L"+-*/^_";
 	std::wstring all_bop = L"+-*/^_";
 	std::wstring all_uop = L"!";
 	bool show_help = false;
 	int rr_level = 1;
+
 	tp::cmdline_parser parser;
 	parser.add_option(L'p', L"opset", &op_set, true, &tp::cmdline_parser::cf_string);
 	parser.add_option(L'h', L"help", &show_help, false, &tp::cmdline_parser::cf_bool);
@@ -467,7 +471,7 @@ int wmain(int argc, wchar_t* argv[])
 		usage();
 		return 0;
 	}
-	if (op_set == L"all") op_set = op_set_all;
+	if (op_set == L"all") op_set = all_bop + all_uop;
 
 	size_t c = parser.get_target_connt();
 	if (c < 3)
