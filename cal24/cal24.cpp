@@ -16,13 +16,14 @@ bool double_equ(double a, double b)
 
 double calc_frac(double n)
 {
-	if (n < 3 || n > 20 || !double_equ(n, (int)n))
+	int ival = (int)floor(n + 0.5);
+	if (ival < 3 || ival > 20 || !double_equ(n, ival))
 	{
 		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	double ret = 1;
-	for (double i = 2; i <= n; i++) ret *= i;
+	for (double i = 2; i <= ival; i++) ret *= i;
 	return ret;
 }
 
