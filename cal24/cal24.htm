@@ -1,4 +1,4 @@
-<html>
+﻿<html>
 
 <head>
 <meta http-equiv=Content-Type content="text/html; charset=utf-8">
@@ -72,7 +72,7 @@ div.WordSection1
 <div class=WordSection1 style='layout-grid:15.6pt'>
 
 <p class=MsoNormal><span lang=EN-US style='font-size:14.0pt;color:#0070C0'>cal24
-V1.0 </span><span lang=EN-US><a href="cal24.zip"><span lang=EN-US
+V2.0 </span><span lang=EN-US><a href="cal24.zip"><span lang=EN-US
 style='font-family:宋体'><span lang=EN-US>下载</span></span></a></span></p>
 
 <p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
@@ -115,8 +115,7 @@ color:#0070C0'>(8 + 4) * (7 - 5) = 24</span></p>
 
 <p class=MsoNormal><b><span style='font-family:宋体'>去重规则</span></b></p>
 
-<p class=MsoNormal><span style='font-family:宋体'>如果您想知道具体的规则，那么下面就是全部（可能有点晕</span><span
-lang=EN-US>~~</span><span style='font-family:宋体'>）</span></p>
+<p class=MsoNormal><span style='font-family:宋体'>缺省的去重规则如下：</span></p>
 
 <p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
 lang=EN-US style='color:#0070C0'>1.</span><span lang=EN-US style='font-size:
@@ -160,7 +159,7 @@ lang=EN-US>1.</span><span lang=EN-US style='font-size:7.0pt;font-family:"Times N
 <p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
 lang=EN-US>2.</span><span lang=EN-US style='font-size:7.0pt;font-family:"Times New Roman","serif"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span><span style='font-family:宋体'>使用</span><span lang=EN-US>-p</span><span
-style='font-family:宋体'>参数指定参与运算的运算符集合。可选的有加，减，乘，除，乘方</span></p>
+style='font-family:宋体'>参数指定参与运算的运算符集合。可选的有加，减，乘，除，乘方，连接和阶乘</span></p>
 
 <p class=MsoListParagraph style='margin-left:18.0pt;text-indent:-18.0pt'><span
 lang=EN-US>3.</span><span lang=EN-US style='font-size:7.0pt;font-family:"Times New Roman","serif"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -181,28 +180,40 @@ cal24 [options] num num [...] result</span></p>
 <p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>options:</span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'> 
--p,--opset   set operator set to use. the full set is &quot;+-*/^&quot;</span></p>
+-p,--opset</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>                the
-default set is &quot;+-*/&quot;</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>     
+operator set to use. default: +-*/</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>      '-p
+all' to use the full set: +-*/^_!.</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>      '_'
+means concat 2 oprands as one decimal number.  e.g. 3_5 &lt;=&gt; 35.</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>      a
+number can follow '!' to specify max apply times when it's used.</span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'> 
--r,--rrlvl   redundant removal level, larger value = cleaner output</span></p>
+-r,--rrlvl</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>              
-level 0: no redundant removal</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>     
+redundant removal level. default: 1</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>              
-level 1: the default level, remove equivalents under</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>      0:
+no redundant removal</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>                       
-the 'exchang' and 'assciation' translations</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>      1:
+remove equivalents under the commulative and associative property</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>              
-level 2: remove '/1' and '-0'. for example,</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>        
+for example, '1+2' would be removed, yet '2+1' be selected</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>                       
-'4-0', '6*7/1', '(4+5)/(9-8)' would be removed</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>      2:
+also remove '/1' and '-0'.</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>        
+for example, '4-0', '6*7/1', '(4+5)/(9-8)' would be removed</span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'> 
 -h,--help    show help</span></p>
@@ -216,20 +227,25 @@ style='font-family:"Courier New"'>:</span></p>
 cal24 6 7 9 9 &nbsp;24</span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
-cal24 1 2 3 4 5 6 7 100</span></p>
+cal24 1 2 3 4 5 6 100</span></p>
 
-<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;
-cal24 --opset=+* 2 2 4</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>  cal24 1
+2 3 4 89 –p “+-*/^!2”</span></p>
 
-<p class=MsoNormal><span lang=EN-US>&nbsp;</span></p>
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New"'>&nbsp;</span><span
+lang=EN-US>&nbsp;</span></p>
 
 <p class=MsoNormal><b><span style='font-family:宋体'>版本历史</span></b></p>
 
 <p class=MsoNormal><span lang=EN-US>2009-10-27 </span><span style='font-family:
 宋体'>初始版本</span></p>
 
-<p class=MsoNormal><span lang=EN-US>2009-10-27  </span><span style='font-family:
-宋体'>增加</span><span lang=EN-US>rrlvl</span><span style='font-family:宋体'>选择，用以控制去重策略</span></p>
+<p class=MsoNormal><span lang=EN-US>2009-10-27&nbsp; </span><span
+style='font-family:宋体'>增加</span><span lang=EN-US>rrlvl</span><span
+style='font-family:宋体'>选择，用以控制去重策略</span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>2009-11-1 </span><span
+style='font-family:宋体'>增加连接和阶乘运算符</span></p>
 
 </div>
 
