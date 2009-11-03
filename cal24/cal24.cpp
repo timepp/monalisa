@@ -7,20 +7,23 @@
 #include <list>
 #include "../timepp_lib/include/cmdlineparser.h"
 
+static bool g_debug = false;
+
 bool double_equ(double a, double b)
 {
-	return std::fabs(a - b) < 1E-6;
+	return std::fabs(a - b) < 1E-10;
 }
 
 double calc_frac(double n)
 {
-	if (n < 3 || n > 20 || !double_equ(n, (int)n))
+	int ival = (int)floor(n + 0.5);
+	if (ival < 3 || ival > 20 || !double_equ(n, ival))
 	{
 		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	double ret = 1;
-	for (double i = 2; i <= n; i++) ret *= i;
+	for (double i = 2; i <= ival; i++) ret *= i;
 	return ret;
 }
 
@@ -54,7 +57,7 @@ int get_pred(wchar_t op)
 	return -1;
 }
 
-bool exchangable(wchar_t op)
+bool commulative(wchar_t op)
 {
 	return op == '+' || op == '*';
 }
@@ -62,9 +65,6 @@ bool associative(wchar_t op)
 {
 	return op == '+' || op == '-' || op == '*' || op == '/';
 }
-
-
-
 
 enum nodetype {nt_op, nt_num};
 struct node
@@ -275,7 +275,7 @@ bool check_bone(const node* p, int rr_level)
 	if (rr_level >= 1)
 	{
 		// 交换率：规定两个分支的顺序
-		if (exchangable(p->op))
+		if (commulative(p->op))
 		{
 			// 不可以在这里判断，在check_exp时对满足交换率的左右子树采用了求值的方法：大值在左
 			// if (shape_less(p->l_child, p->r_child, false)) return false;
@@ -304,8 +304,18 @@ bool check_bone2(const node* p, int rr_level)
 	
 	if (p->op == L'_')
 	{
-		if (p->l_child->t == nt_num && p->l_child->translist.size() > 0) return false;
-		if (p->r_child->t == nt_num && p->r_child->translist.size() > 0) return false;
+		if (p->l_child->t == nt_num)
+		{
+			if (p->l_child->translist.size() > 0) return false;
+			int ival = (int)floor(p->l_child->num + 0.5);
+			if (ival < 0 || ival > 9 || !double_equ(p->l_child->num, ival)) return false;
+		}
+		if (p->r_child->t == nt_num)
+		{
+			if (p->r_child->translist.size() > 0) return false;
+			int ival = (int)floor(p->r_child->num + 0.5);
+			if (ival < 0 || ival > 9 || !double_equ(p->r_child->num, ival)) return false;
+		}
 	}
 
 	if (!check_bone2(p->l_child, rr_level)) return false;
@@ -319,7 +329,7 @@ bool check_exp(const node* p, int rr_level)
 	// rrlvl1: 交换率，以下两个判断保证了A+B+C+...+Z这种形式下，只选择A>B>C>...>Z这一种组合
 	if (rr_level >= 1)
 	{
-		if (exchangable(p->op))
+		if (commulative(p->op))
 		{
 			double v1 = p->l_child->val();
 			double v2 = p->r_child->val();
@@ -348,14 +358,17 @@ bool check_exp(const node* p, int rr_level)
 	return true;
 }
 
-void iterate_num_permutation(node* exp, node** num_nodes, int* nums, int num_count, int result, int rr_level)
+void iterate_num_permutation(node* exp, node** num_nodes, double* nums, int num_count, double result, int rr_level)
 {
 	do
 	{
 		for (int i = 0; i < num_count; i++) num_nodes[i]->num = nums[i];
 		if (check_exp(exp, rr_level))
 		{
-		//	std::wcout << get_exp(exp) << " = " << exp->val() << std::endl;
+			if (g_debug)
+			{
+		    	std::wcout << get_exp(exp) << " = " << exp->val() << std::endl;
+			}
 			if (double_equ(exp->val(), result))
 			{
 				std::wcout << get_exp(exp) << " = " << result << std::endl;
@@ -365,7 +378,7 @@ void iterate_num_permutation(node* exp, node** num_nodes, int* nums, int num_cou
 }
 
 // 在一个固定形状表达式树上进行搜索
-void calc_on_exptree(node* exp, const wchar_t* bop, const uti_list_t& uop, int* nums, int num_count, int result, int rr_level)
+void calc_on_exptree(node* exp, const wchar_t* bop, const uti_list_t& uop, double* nums, int num_count, double result, int rr_level)
 {
 	// 首先得到所有结点的线性引用
 	int n = get_op_count(exp);
@@ -424,22 +437,26 @@ void usage()
 	std::wcout << 
 		"usage: cal24 [options] num num [...] result\n"
 		"options: \n"
-		"  -p,--opset   set operator set to use. the full set is \"+-*/^_\"\n"
-		"               the default set is \"+-*/\"\n"
-		"               use '-p all' to use all op set\n"
-		"  -r,--rrlvl   redundant removal level, larger value = cleaner output\n"
-		"               level 0: no redundant removal \n"
-		"               level 1: the default level, remove equivalents under\n"
-		"                        the 'exchang' and 'assciation' translations\n"
-		"               level 2: remove '/1' and '-0'. for example,\n"
-		"                        '4-0', '6*7/1', '(4+5)/(9-8)' would be removed\n"
+		"  -p,--opset\n"
+		"      operator set to use. default: +-*/\n"
+		"      '-p all' to use the full set: +-*/^_!.\n"
+		"      '_' means concat 2 oprands as one decimal number.  e.g. 3_5 <=> 35.\n"
+		"      a number can follow '!' to specify max apply times when it's used.\n"
+		"  -r,--rrlvl\n"
+		"      redundant removal level. default: 1\n"
+		"      0: no redundant removal \n"
+		"      1: remove equivalents under the commulative and associative property\n"
+		"         for example, '1+2' would be removed, yet '2+1' be selected\n"
+		"      2: also remove '/1' and '-0'. \n"
+		"         for example, '4-0', '6*7/1', '(4+5)/(9-8)' would be removed\n"
 		"  -h,--help    show help\n"
 		"\n"
 		"examples: \n"
 		"  cal24 5 5 5 1 24\n"
 		"  cal24 1 2 3 4 5 6 100\n"
-		"  cal24 --opset=\"+-*/^\" 1 2 3 4 82\n"
-		"  cal24 1 2 3 4 24 -r 2 -p \"+-*/_\""
+		"  cal24 4 1 25 -p \"+!\"\n"
+		"  cal24 --opset=\"+-*/^!2\" 1 2 3 4 89\n"
+		"  cal24 1 2 3 4 24 -r 2 -p \"+-*/_\"\n"
 		"\n"
 		"any bugs, please report to timepp@126.com\n"
 		;
@@ -448,15 +465,16 @@ void usage()
 int wmain(int argc, wchar_t* argv[])
 {
 	std::wstring op_set = L"+-*/";
-	std::wstring op_set_all = L"+-*/^_";
 	std::wstring all_bop = L"+-*/^_";
 	std::wstring all_uop = L"!";
 	bool show_help = false;
 	int rr_level = 1;
+
 	tp::cmdline_parser parser;
 	parser.add_option(L'p', L"opset", &op_set, true, &tp::cmdline_parser::cf_string);
 	parser.add_option(L'h', L"help", &show_help, false, &tp::cmdline_parser::cf_bool);
 	parser.add_option(L'r', L"rrlvl", &rr_level, true, &tp::cmdline_parser::cf_int);
+	parser.add_option(0, L"debug", &g_debug, false, &tp::cmdline_parser::cf_bool);
 	if (!parser.parse(argc, argv))
 	{
 		usage();
@@ -467,7 +485,7 @@ int wmain(int argc, wchar_t* argv[])
 		usage();
 		return 0;
 	}
-	if (op_set == L"all") op_set = op_set_all;
+	if (op_set == L"all") op_set = all_bop + all_uop;
 
 	size_t c = parser.get_target_connt();
 	if (c < 3)
@@ -502,12 +520,12 @@ int wmain(int argc, wchar_t* argv[])
 		}
 	}
 
-	int d = _wtoi(parser.get_target(c-1).c_str());
+	double d = _wtof(parser.get_target(c-1).c_str());
 	size_t num_count = c-1;
-	int* nums = new int[num_count];
+	double* nums = new double[num_count];
 	for (size_t i = 0; i < num_count; i++)
 	{
-		nums[i] = _wtoi(parser.get_target(i).c_str());
+		nums[i] = _wtof(parser.get_target(i).c_str());
 	}
 
 	node* p = initial_state(num_count-1);
