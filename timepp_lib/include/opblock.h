@@ -8,6 +8,10 @@
 #include "service.h"
 #include "defs.h"
 
+#define OPBLOCK(x) tp::opblock CONCAT(opblk,__LINE__)(x)
+#define SETOP(x) tp::service<tp::opmgr>::instance().set_op(x)
+#define CURRENT_OPLIST() tp::service<tp::opmgr>::instance().get_oplist(L" -> ")
+
 namespace tp
 {
 	class opmgr
@@ -93,9 +97,5 @@ namespace tp
 		}
 	};
 }
-
-#define OPBLOCK(x) tp::opblock CONCAT(opblk,__LINE__)(x)
-#define SETOP(x) tp::service<tp::opmgr>::instance().set_op(x)
-#define CURRENT_OPLIST() tp::service<tp::opmgr>::instance().get_oplist(L" -> ")
 
 #endif

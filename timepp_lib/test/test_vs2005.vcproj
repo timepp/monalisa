@@ -226,6 +226,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\exception.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\format_shim.h"
 				>
 			</File>

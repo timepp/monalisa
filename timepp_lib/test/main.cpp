@@ -3,8 +3,11 @@
 #include <windows.h>
 #include <tplib.h>
 #include <cmdlineparser.h>
+#include <exception.h>
 #include <wincon.h>
 #include <opblock.h>
+
+
 
 void test_old()
 {
@@ -17,6 +20,8 @@ void test_old()
 //		tp::log_indenter li(2);
 //		tp::log(tp::cz(L"%02d %s", i, argv[i]));
 	}
+
+	tp::throw_winerr_when(true);
 
 	tp::log(L"check main");
 	{
@@ -31,11 +36,20 @@ int wmain(int argc, wchar_t *argv[])
 	setlocale(LC_ALL, "");
 	tp::sc::log_default_console_config();
 
-//	OPBLOCK(L"aaa");
-//	OPBLOCK(L"bbb");
+	OPBLOCK(L"aaa");
+	OPBLOCK(L"bbb");
 	SETOP(L"ccc");
 
 	tp::log(tp::cz(L"%s", CURRENT_OPLIST().c_str()));
+
+	try
+	{
+		test_old();
+	}
+	catch (tp::exception& e)
+	{
+		tp::log(tp::cz(L"´íÎó£º%s  µ±Ç°²Ù×÷£º(%s)", e.err->desc().c_str(), e.oplist.c_str()));
+	}
 
 	return 0;
 }
