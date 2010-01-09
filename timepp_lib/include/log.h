@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include "api_wrapper.h"
-#include "tstring.h"
 #include "lock.h"
 
 #define TP_LOG_MULTI_THREAD

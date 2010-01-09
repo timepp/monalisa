@@ -1,7 +1,6 @@
 #pragma once
 
 #include "log.h"
-#include "tstring.h"
 #include <windows.h>
 #include <stdio.h>
 #include <string>

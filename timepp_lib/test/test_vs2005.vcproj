@@ -278,10 +278,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\sys_error.h"
-				>
-			</File>
-			<File
 				RelativePath="..\include\tplib.h"
 				>
 			</File>

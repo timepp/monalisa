@@ -5,8 +5,10 @@
 // 在当前块结束时自动调用注册的f(r)
 // 例: AUTO_RELEASE(fp, fclose)
 
+#ifndef CONCAT
 #define CONCAT_INNER(a,b) a##b
 #define CONCAT(a,b) CONCAT_INNER(a,b)
+#endif
 
 #define ON_LEAVE(statement) \
 	struct CONCAT(s_ol_, __LINE__) { \
