@@ -29,6 +29,12 @@ namespace tp
 		HRESULT errcode;
 		virtual std::wstring desc() const { return std::wstring(tp::edcom(errcode)); }
 	};
+	struct error_user : public error
+	{
+		error_user(const wchar_t* msg) : m_msg(msg) {}
+		std::wstring m_msg;
+		virtual std::wstring desc() const { return m_msg; }
+	};
 
 
 	struct exception
@@ -55,6 +61,13 @@ namespace tp
 		if (cond)
 		{
 			throw tp::exception(new tp::error_std(errno));
+		}
+	}
+	void throw_usererr_when(bool cond, const wchar_t* msg)
+	{
+		if (cond)
+		{
+			throw tp::exception(new tp::error_user(msg));
 		}
 	}
 	
