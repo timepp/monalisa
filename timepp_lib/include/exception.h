@@ -29,6 +29,7 @@ namespace tp
 		HRESULT errcode;
 		virtual std::wstring desc() const { return std::wstring(tp::edcom(errcode)); }
 	};
+
 	struct error_custom : public error
 	{
 		error_custom(const wchar_t* msg) : message(msg) {}
