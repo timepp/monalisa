@@ -202,9 +202,9 @@ void CTipDlg::OnInputChange()
 	{
 		if (!IsWindowVisible())
 		{
-			RECT rc;
+			CRect rc;
 			::GetWindowRect(m_pair, &rc);
-			SetWindowPos(0, rc.left, rc.bottom + 5, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE | SWP_SHOWWINDOW);
+			SetWindowPos(0, rc.left, rc.bottom + 5, rc.Width(), rc.Height(), SWP_NOACTIVATE | SWP_SHOWWINDOW);
 		}
 		Resize();
 		m_list.SelectItem(0);

@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Chinese (P.R.C.) resources
+// Chinese (Simplified, PRC) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
-#ifdef _WIN32
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 #pragma code_page(936)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -34,12 +32,12 @@ BEGIN
     EDITTEXT        IDC_PROG_EDIT,7,92,175,14,ES_AUTOHSCROLL | NOT WS_VISIBLE,WS_EX_CLIENTEDGE
 END
 
-IDD_TIP DIALOGEX 0, 0, 129, 89
+IDD_TIP DIALOGEX 0, 0, 283, 89
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,0,0,129,89
+    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,0,0,283,89
 END
 
 IDD_PROG DIALOGEX 0, 0, 310, 201
@@ -149,7 +147,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_RUNDLG, DIALOG
     BEGIN
@@ -157,6 +155,11 @@ BEGIN
         RIGHTMARGIN, 182
         TOPMARGIN, 7
         BOTTOMMARGIN, 106
+    END
+
+    IDD_TIP, DIALOG
+    BEGIN
+        RIGHTMARGIN, 129
     END
 
     IDD_PROG, DIALOG
@@ -266,7 +269,7 @@ IDB_QUICK_LAUNCH        BITMAP                  "res\\quick_launch.bmp"
 // Menu
 //
 
-IDR_MENU_POPUP MENU 
+IDR_MENU_POPUP MENU
 BEGIN
     POPUP "m1"
     BEGIN
@@ -349,7 +352,7 @@ BEGIN
     0
 END
 
-#endif    // Chinese (P.R.C.) resources
+#endif    // Chinese (Simplified, PRC) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
