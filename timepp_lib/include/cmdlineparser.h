@@ -3,6 +3,8 @@
 #include <string>
 #include <list>
 #include <map>
+#include <vector>
+#include "./auto_release.h"
 
 namespace tp
 {
@@ -27,7 +29,7 @@ private:
 
 	polist_t m_po;
 	ssmap_t m_om;
-	std::list<std::wstring> m_targets;
+	std::vector<std::wstring> m_targets;
 
 	parse_option* lookup(const wchar_t* opt)
 	{
@@ -147,6 +149,8 @@ public:
 
 		int argc = static_cast<int>(param_list.size());
 		const wchar_t** argv = new const wchar_t* [argc];
+		ON_LEAVE_1(delete[] argv, const wchar_t**, argv);
+
 		int i = 0;
 		for (std::list<std::wstring>::const_iterator it = param_list.begin(); it != param_list.end(); ++it)
 		{
@@ -154,8 +158,6 @@ public:
 		}
 
 		bool ret = parse(argc, argv);
-
-		delete [] argv;
 
 		return ret;
 	}
@@ -244,24 +246,16 @@ public:
 
 	std::wstring get_target(size_t index) const
 	{
-		std::list<std::wstring>::const_iterator it = m_targets.begin();
-		while (it != m_targets.end())
+		if (index >= m_targets.size())
 		{
-			if (index == 0) return *it;
-			--index;
-			++it;
+			return L"";
 		}
-		return L"";
+		return m_targets[index];
 	}
 
 	size_t get_target_connt() const
 	{
 		return m_targets.size();
-	}
-
-	std::list<std::wstring> get_targets() const
-	{
-		return m_targets;
 	}
 };
 

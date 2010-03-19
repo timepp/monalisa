@@ -1,47 +1,44 @@
 #pragma once
+#include "defs.h"
 
 // ----------------------------------------------------------------------------
 // 资源自动释放宏AUTO_RELEASE
 // 在当前块结束时自动调用注册的f(r)
 // 例: AUTO_RELEASE(fp, fclose)
 
-#ifndef CONCAT
-#define CONCAT_INNER(a,b) a##b
-#define CONCAT(a,b) CONCAT_INNER(a,b)
-#endif
 
 #define ON_LEAVE(statement) \
-	struct CONCAT(s_ol_, __LINE__) { \
-		~CONCAT(s_ol_, __LINE__)() { statement; } \
-	} CONCAT(v_ol_, __LINE__);
+	struct LINE_NAME(ols_) { \
+		~LINE_NAME(ols_)() { statement; } \
+	} LINE_NAME(olv_);
 
 #define ON_LEAVE_1(statement, type, var) \
-	struct CONCAT(s_ol_, __LINE__) { \
+	struct LINE_NAME(ols_) { \
 		type var; \
-		CONCAT(s_ol_, __LINE__)(type v): var(v) {} \
-		~CONCAT(s_ol_, __LINE__)() { statement; } \
-	} CONCAT(v_ol_, __LINE__)(var);
+		LINE_NAME(ols_)(type v): var(v) {} \
+		~LINE_NAME(ols_)() { statement; } \
+	} LINE_NAME(olv_)(var);
 
 #define ON_LEAVE_2(statement, type1, var1, type2, var2) \
-	struct CONCAT(s_ol_, __LINE__) { \
+	struct LINE_NAME(ols_) { \
 		type1 var1; type2 var2; \
-		CONCAT(s_ol_, __LINE__)(type1 v1, type2 v2): var1(v1), var2(v2) {} \
-		~CONCAT(s_ol_, __LINE__)() { statement; } \
-	} CONCAT(v_ol_, __LINE__)(var1, var2);
+		LINE_NAME(ols_)(type1 v1, type2 v2): var1(v1), var2(v2) {} \
+		~LINE_NAME(ols_)() { statement; } \
+	} LINE_NAME(olv_)(var1, var2);
 
 #define ON_LEAVE_3(statement, type1, var1, type2, var2, type3, var3) \
-	struct CONCAT(s_ol_, __LINE__) { \
+	struct LINE_NAME(ols_) { \
 		type1 var1; type2 var2; type3 var3; \
-		CONCAT(s_ol_, __LINE__)(type1 v1, type2 v2, type3 v3): var1(v1), var2(v2), var3(v3) {} \
-		~CONCAT(s_ol_, __LINE__)() { statement; } \
-	} CONCAT(v_ol_, __LINE__)(var1, var2, var3);
+		LINE_NAME(ols_)(type1 v1, type2 v2, type3 v3): var1(v1), var2(v2), var3(v3) {} \
+		~LINE_NAME(ols_)() { statement; } \
+	} LINE_NAME(olv_)(var1, var2, var3);
 
 #define ON_LEAVE_4(statement, type1, var1, type2, var2, type3, var3, type4, var4) \
-	struct CONCAT(s_ol_, __LINE__) { \
+	struct LINE_NAME(ols_) { \
 		type1 var1; type2 var2; type3 var3; type4 var4; \
-		CONCAT(s_ol_, __LINE__)(type1 v1, type2 v2, type3 v3, type4 v4): var1(v1), var2(v2), var3(v3), var4(v4) {} \
-		~CONCAT(s_ol_, __LINE__)() { statement; } \
-	} CONCAT(v_ol_, __LINE__)(var1, var2, var3, var4);
+		LINE_NAME(ols_)(type1 v1, type2 v2, type3 v3, type4 v4): var1(v1), var2(v2), var3(v3), var4(v4) {} \
+		~LINE_NAME(ols_)() { statement; } \
+	} LINE_NAME(olv_)(var1, var2, var3, var4);
 
 
 namespace tp

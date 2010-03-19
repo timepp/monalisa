@@ -80,7 +80,7 @@ UINT hotkey_waker::get_vk_code(const wchar_t * vk)
 	{
 		throw os_err(dos, op, L"ÎÄ¼þÃû:%s", &fn);
 	}
-	AUTO_RELEASE(fp, fclose);
+	ON_LEAVE_1(fclose(fp), FILE*, fp);
 
 	size_t key_len = wcslen(vk);
 	wchar_t line[256];
