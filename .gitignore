@@ -2,6 +2,9 @@
 *.swp
 *.ncb
 *.log
+*.pdb
+*.ilk
+*.aps
 Debug
 Release
 ipch
