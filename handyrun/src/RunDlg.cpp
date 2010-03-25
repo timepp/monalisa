@@ -25,6 +25,7 @@ using std::max;
 
 #define IDT_AUTO_FOLD 1002
 #define IDT_AUTO_FOLD_WHEN_MOUSE_UP 1003
+#define IDT_SAVE_CONFIG 1004
 
 static CRunDlg * g_dlg = NULL;
 static cfg::config * g_c = NULL;
@@ -825,6 +826,8 @@ LRESULT CRunDlg::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	}
 	
 	change_op_state(os_hover);
+
+	SetTimer(IDT_SAVE_CONFIG, 1000 * 600);
 	return TRUE;
 }
 
@@ -859,6 +862,10 @@ LRESULT CRunDlg::OnTimer(UINT, WPARAM wp, LPARAM, BOOL&)
 			KillTimer(wp);
 			EndRequest();
 		}
+	}
+	else if (wp == IDT_SAVE_CONFIG)
+	{
+		g_c->save();
 	}
 	return 0;
 }
