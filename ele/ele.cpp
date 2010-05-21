@@ -1,4 +1,4 @@
-#include <windows.h>
+﻿#include <windows.h>
 
 #define SMNAME L"ELE{8A7A7823-C4B2-4F5A-84DA-11C1B6451AD7}"
 #define SMSIZE 65536
@@ -72,12 +72,12 @@ int Ele()
 	else if (!*lpCmd)
 	{
 		::MessageBoxW(NULL, 
-			L"�Թ���Ա�������г���(����UAC����ȷ��)����ele����Ȩ�޵ĳ���ᱣ������eleʱ�ĵ�ǰĿ¼��\n"
+			L"以管理员身份运行程序(弹出UAC框以确认)。以ele提升权限的程序会保持启动ele时的当前目录。\n"
 			L"\n"
-			L"�÷���\n"
-			L"ele <Ҫ���еĳ�����> <�������>\n"
+			L"用法：\n"
+			L"ele <要运行的程序名> <程序参数>\n"
 			L"\n"
-			L"VERSION: 1.0\n"
+			L"VERSION: 1.0\n" 
 			,PROGNAME, MB_OK|MB_ICONINFORMATION);
 	}
 	else
