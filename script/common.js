@@ -1,15 +1,93 @@
-﻿var fso = new ActiveXObject("Scripting.FileSystemObject");
-var shell = new ActiveXObject("WScript.Shell");
-var wmi = null;
+﻿//常量
 var ForReading = 1, ForWriting = 2;
+var HKEY_LOCAL_MACHINE = 0x80000002;
+var HKEY_CURRENT_USER = 0x80000001;
+var HKEY_CLASSES_ROOT = 0x80000000;
+var SHN_FONTS = 0x14;
 
-function WMI()
+// 对象
+var fso = new ActiveXObject("Scripting.FileSystemObject");
+var shell = new ActiveXObject("WScript.Shell");
+var shellapp = new ActiveXObject("Shell.Application");
+
+// 其他
+var g_wmi = null;
+
+function WMI(path) {
+    if (!g_wmi) {
+        g_wmi = new Object;
+    }
+    if (!g_wmi[path]) {
+        g_wmi[path] = GetObject("winmgmts:root/" + path);
+    }
+    return g_wmi[path];
+}
+
+function REG() {
+    return WMI("default").Get("StdRegProv");
+}
+
+function IsAdmin() {
+    var oNet = new ActiveXObject("WScript.Network");
+    var oGroup = GetObject("WinNT://./Administrators");
+    var e = new Enumerator(oGroup.Members());
+    for (; !e.atEnd(); e.moveNext()) {
+        if (e.item().Name == oNet.UserName) return true;
+    }
+    return false;
+}
+
+function HasFullPrivilege() {
+    try {
+        var value = shell.RegRead("HKEY_USERS\\S-1-5-19\\");
+    }
+    catch (e) {
+        return false;
+    }
+    return true;
+}
+
+function ElevatePrivilege(cmdline) {
+    if (!HasFullPrivilege()) {
+        var oNet = new ActiveXObject("WScript.Network");
+        var ret = shellapp.ShellExecute("mshta.exe", cmdline + "--uac --user=" + oNet.UserName, "", "runas", 1);
+        window.close();
+        return true;
+    }
+    return false;
+}
+
+function InvokeCommonRegTask(cmd, root, key, valname, val)
 {
-	if (!wmi)
+ 	var func = REG().Methods_.Item(cmd);
+	var param = func.InParameters.SpawnInstance_();
+	param.hDefKey = root;
+	param.sSubKeyName = key;
+	param.sValueName = valname;
+	if (val != null)
 	{
-		wmi = GetObject("winmgmts:\\\\.\\root\\cimv2");
+		if (typeof(val) == "string") param.sValue = val;
+		else param.uValue = val;
 	}
-	return wmi;
+	return REG().ExecMethod_(func.Name, param);	
+}
+function RegGetStringValue(root, key, val)
+{
+    var ret = InvokeCommonRegTask("GetStringValue", root, key, val);
+	return ret.sValue;
+}
+function RegIsStringValueExist(root, key, val)
+{
+    var s = RegGetStringValue(root, key, val);
+    return s != undefined && s != null;
+}
+function RegGetDWORDValue(root, key, val)
+{
+	return InvokeCommonRegTask("GetDWORDValue", root, key, val).uValue;
+}
+function RegSetDWORDValue(root, key, valname, val)
+{
+	return InvokeCommonRegTask("SetDWORDValue", root, key, valname, val);
 }
 
 function ResizeWindow(cx, cy, center)
@@ -17,12 +95,158 @@ function ResizeWindow(cx, cy, center)
 	window.resizeTo(cx, cy);
 	if (center)
 	{
-		var items = WMI().ExecQuery("Select * From Win32_DesktopMonitor");
+		var items = WMI("cimv2").ExecQuery("Select * From Win32_DesktopMonitor");
 		var item = new Enumerator(items).item();
 		var w = item.ScreenWidth;
 		var h = item.ScreenHeight;
 		window.moveTo((w-cx)/2, (h-cy)/2);
 	}
+}
+
+function ClearTable(tbl)
+{
+    while (tbl.rows.length > 0)
+    {
+        tbl.deleteRow(0);
+    }
+}
+
+function Glob(dir, fn_regex)
+{
+    var r = new Array;
+    var e = new Enumerator(dir.files);
+    for (;!e.atEnd();e.moveNext())
+    {
+        var f = e.item();
+        if (f.Path.search(fn_regex) != -1)
+        {
+            r.push(f.Path);
+        }
+    }
+    return r;
+}
+
+function CreateLnk(lnkName, targetPath, dir, argument, desc)
+{
+    var oLnk = shell.CreateShortcut(lnkName);
+    oLnk.TargetPath = targetPath;
+    oLnk.WorkingDirectory = dir;
+    oLnk.Description = desc
+    oLnk.Arguments = argument;
+    oLnk.Save();
+}
+
+function IndexOf(arr, str, nocase)
+{
+    for (var i = 0; i < arr.length; i++)
+    {
+        if (nocase)
+        {
+            if (arr[i].toLowerCase() == str.toLowerCase()) return i;
+        }
+        else
+        {
+            if (arr[i] == str) return i;
+        }
+    }
+    return -1;
+}
+
+function GetEnv(vname)
+{
+    var items = WMI("cimv2").ExecQuery("Select * from Win32_Environment Where Name = '$V'".replace("$V", vname));
+	if (!items || items.Count == 0) return null;
+	var item = new Enumerator(items).item();
+	Log("$K --> $V".replace("$K", vname).replace("$V", item.VariableValue));
+	return item.VariableValue;
+}
+
+function SetEnv(vname, val, login_name)
+{
+    if (login_name == null) login_name = "<SYSTEM>";
+    
+    var item = WMI("cimv2").Get("Win32_Environment").SpawnInstance_();
+	item.Name = vname;
+	item.Username = login_name;
+	item.VariableValue = val;
+	item.Put_();
+}
+
+function IsInPathEnv(path)
+{
+    var items = WMI("cimv2").ExecQuery("Select * from Win32_Environment Where Name = 'PATH'");
+    var item = new Enumerator(items).item();
+    var val = item.VariableValue.toLowerCase() + ";";
+    
+    var ps = path.split(";");
+    for (var i = 0; i < ps.length; i++)
+    {
+        if (ps[i] != "" && val.indexOf(ps[i].toLowerCase() + ";") == -1) return false;
+    }
+    return true;
+}
+function ChangePathEnv(pathToAdd, pathToDel)
+{
+    var items = WMI("cimv2").ExecQuery("Select * from Win32_Environment Where Name = 'PATH'");
+    var item = new Enumerator(items).item();
+    
+    Log("旧路径：" + item.VariableValue);
+    Log("需要增加：" + pathToAdd);
+    Log("需要删除：" + pathToDel)
+
+    var val = item.VariableValue;
+    var ps = val.split(";");
+    var ps_add = pathToAdd.split(";");
+    var ps_del = pathToDel.split(";");
+    var ps_final = new Array;
+    
+    ps = ps.concat(ps_add);
+    for (var i = 0; i < ps.length; i++)
+    {
+        if (ps[i] == "") continue;
+        if (IndexOf(ps_del, ps[i], true) >= 0) continue;
+        if (IndexOf(ps_final, ps[i], true) >= 0) continue;
+        ps_final.push(ps[i]);
+    }
+    
+    item.VariableValue = ps_final.join(";");
+    item.Put_();
+    Log("新路径：" + item.VariableValue);
+    return true;
+}
+
+function IsNeedCopy(src, dest)
+{
+    if (!fso.FileExists(src))
+    {
+        throw "源[" + src + "]不存在";
+    }
+    if (!dest)
+    {
+        throw "目标为空";
+    }
+    if (!fso.FileExists(dest)) return true;
+    var f1 = fso.GetFile(src);
+    var f2 = fso.GetFile(dest);
+    if (f1 && f2 && f1.Size == f2.Size) return false;
+    return true;
+}
+
+function CopyFile(src, dest)
+{
+    if (!fso.FileExists(src))
+    {
+        throw "源[" + src + "]不存在";
+    }
+    if (!dest)
+    {
+        throw "目标为空";
+    }
+    
+    var f1 = fso.GetFile(src);
+    f1.Copy(dest);
+    Log("[$1] --> [$2]".replace("$1", src).replace("$2", dest));
+    return true;
 }
 
 function RunCommand(cmd, a, b)
@@ -45,7 +269,17 @@ function SetText(obj, text, color)
 	if (color == undefined) color = "black";
 	obj.innerHTML = text.fontcolor(color);
 }
-
+function SplitCommandLine(cmdline)
+{
+	args = new Array;
+	var re = /^\s*("[^"]+"|[^" ]+)/;
+	while ((arr = re.exec(cmdline)) != null)
+	{
+		args.push(arr[1].replace(/^("?)(.*)\1$/, "$2"));
+		cmdline = cmdline.substr(arr.lastIndex);
+	}
+	return args;
+}
 // 取文本文件信息, \r\n会被替换为\n， 文件中不能有控制字符
 function GetTextFileContent(filename)
 {
@@ -85,14 +319,13 @@ function PlainTextToHTML(text)
 function GetBinaryFileContent(filename, pos, len)
 {
 	var stream = new ActiveXObject("ADODB.Stream");
-//	stream.Type = 1;
+	//	stream.Type = 1;
 	stream.Open();
 	stream.LoadFromFile(filename);
 	stream.Position = pos;
 	var str = "";
-//	str = stream.Read(len);
+	//	str = stream.Read(len);
 	str = stream.ReadText(len);
-	debugger;
 	return DumpBin(str);
 }
 
@@ -103,7 +336,7 @@ function DumpBin(str, npl){
 		var n = str.charCodeAt(pos);
 		return codeMap[n/16] + codeMap[n%16];
 	}
-	
+
 	var outstr;
 	for (var i = 0; i < str.length; i += npl)
 	{
@@ -119,7 +352,7 @@ function DumpBin(str, npl){
 				outstr += hex(str, pos) + " ";
 			}
 		}
-		
+
 		outstr += " ";
 		for (var j = 0; j < npl; j++)
 		{
@@ -134,7 +367,7 @@ function DumpBin(str, npl){
 				outstr += (n >= 0x20 && n < 0x80)? String.fromCharCode(n) : ".";
 			}
 		}
-		
+
 		outstr += "\n";
 	}
 }

@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>PDB下载工具</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="MSThemeCompatible" content="Yes">
+    <link rel="stylesheet" href="htastyle.css" />
+    <script type="text/javascript" src="common.js"></script>
+    <script language="javascript">
+        ResizeWindow(760, 520, true);
+    </script>
+    <hta:application id="GetPDB" scroll="no" icon="mobsync.exe" />
+    <script language="javascript">
+        var shell = new ActiveXObject("WScript.Shell");
+        var pdb_root_path = shell.CurrentDirectory;
+        var oPdbPath = null;
+        var oVersion = null;
+        var oHTA = null;
+
+        function Item(t) {
+            return document.getElementById(t);
+        }
+        function Init() {
+            oPdbPath = Item("input_pdb_root_path");
+            oVersion = Item("input_ver");
+            oHTA = Item("GetPDB");
+            oCmd = Item("ta_wget");
+            oPdbPath.innerText = pdb_root_path;
+            OnInputChange();
+        }
+        function GetVersionInfo() {
+            var oVI = new Object;
+            oVI.version = oVersion.value;
+            oVI.version_remote = oVI.version.replace(/\./g, "-");
+            oVI.pdb_path = oPdbPath.value + (oPdbPath.value.length ? "\\" : "") + oVI.version;
+            return oVI;
+        }
+        function OnInputChange() {
+            var oVI = GetVersionInfo();
+            var cmd = "wget.exe "
+                + "--ftp-user=getprod --ftp-password=getprod \n"
+                + "--recursive --no-clobber --no-host-directories --no-directories \n"
+                + "--include-directories=*output,*pdb,*output/release,*output/plugins,*output/plugins/* \n"
+                + "--directory-prefix=\"%VER%\" \n"
+                + "\"ftp://jx-scm-product.jx.baidu.com/home/data/prod-32/app/gensoft/dialog/bridge/bridge_%VER_REMOTE%_PD_BL/output\" ";
+            cmd = cmd.replace(/%VER%/g, oVI.pdb_path).replace(/%VER_REMOTE%/g, oVI.version_remote);
+            oCmd.innerText = cmd;
+        }
+        function DownLoad() {
+            var version = oVersion.value;
+            if (version.length == 0) {
+                alert("请输入版本号");
+                oVersion.focus();
+                return;
+            }
+
+            var cmd = oCmd.value;
+            shell.Run(cmd);
+        }
+        function EditSelf() {
+            shell.Run("notepad " + oHTA.commandLine);
+        }
+        function OpenPdbPath() {
+            shell.Run(GetVersionInfo().pdb_path);
+        }
+    </script>
+</head>
+<body onload="Init()" onkeydown="if (event.keyCode == 27) window.close()">
+    <span class="ref">下载目录：</span><br />
+    <input type="text" style="width:100%" id="input_pdb_root_path" onkeyup="OnInputChange()"></input>
+    <br />
+    <span class="ref">产品版本：</span>(e.g. 2.4.12.1)<br />
+    <input type="text" style="width:100%" id="input_ver" onkeyup="OnInputChange()"></input>
+    <br />
+    wget命令行：（根据上面输入自动生成，也可手动修改）<br />
+    <textarea rows="8" id="ta_wget"></textarea>
+    <br />
+    <button onclick="DownLoad()">
+        下载</button>
+    <br />
+    <br />
+    <hr />
+    说明：<br />
+    <span class="ref" style="cursor: hand;" onclick="EditSelf()">本程序</span>用于从编译机上下载指定版本的PDB和binary进行崩溃分析。下载时只会下载和分析崩溃有关的（<span
+        class="em">根目录/PDB目录/plugins目录</span>）文件，不会下载图片表情等。下载到本地后这些文件不分目录，全部保存在<span class="ref"
+            style="cursor: hand" onclick="OpenPdbPath()">PDB目录\百度Hi版本</span>这个目录下。<br />
+    <span class="warning">本程序调用wget.exe进行下载，请确保wget.exe放在能找得到的地方（比如在%path%环境变量里）。</span>
+</body>
+</html>
