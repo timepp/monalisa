@@ -73,6 +73,7 @@ protected:
 	std::map<int, WORD> m_ca;
 	WORD m_default_attr;
 	bool m_free_console_on_close;
+	bool padding[1];
 
 private:
 	static bool is_handle_valid(HANDLE handle)

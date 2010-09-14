@@ -7,7 +7,7 @@ typedef DWORD threadid_t;
 
 namespace tp
 {
-	namespace os
+	struct os
 	{
 		class tls_value
 		{
@@ -26,11 +26,11 @@ namespace tp
 			DWORD m_index;
 		};
 
-		threadid_t current_tid()
+		static threadid_t current_tid()
 		{
 			return static_cast<threadid_t>(GetCurrentThreadId());
 		}
-	}
+	};
 }
 
 #endif

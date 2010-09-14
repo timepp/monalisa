@@ -1,29 +1,49 @@
 #ifndef TP_LOG_H_INCLUDED
 #define TP_LOG_H_INCLUDED
 
-// ÁÙ½çÇøËø
-class critical_lock
+namespace tp
+{
+
+
+struct dummy_lock
+{
+	void lock() {}
+	void unlock() {}
+};
+
+struct critical_section_lock
+{
+	critical_section_lock()  { ::InitializeCriticalSection(&m_cs); }
+	~critical_section_lock() { ::DeleteCriticalSection(&m_cs); }
+	void lock()   {::EnterCriticalSection(&m_cs); }
+	void unlock() {::LeaveCriticalSection(&m_cs); }
+private:
+	CRITICAL_SECTION m_cs;
+};
+
+template <typename T>
+class autolocker
 {
 public:
 
-	critical_lock() : m_cs(0)
+	explicit autolocker(T& l) : locker(l)
 	{
+		locker.lock();
 	}
 
-	explicit critical_lock(CRITICAL_SECTION& cs)
+	~autolocker()
 	{
-		m_cs = &cs;
-		::EnterCriticalSection(m_cs);
-	}
-
-	~critical_lock()
-	{
-		::LeaveCriticalSection(m_cs);
+		locker.unlock();
 	}
 
 private:
-	CRITICAL_SECTION * m_cs;
+
+	autolocker& operator= (const autolocker& a);
+
+	T& locker;
 };
 
+
+}
 
 #endif

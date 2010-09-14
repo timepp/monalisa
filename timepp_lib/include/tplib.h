@@ -55,13 +55,18 @@ namespace tp
 			log_add_device(c, 0xFF);
 			log_cc(c) << new lc_time(L"%H:%M:%S", true);
 			if (show_tid) log_cc(c) << L" " << new lc_tid;
-			log_cc(c) << L" " << new lc_type(L"VIDE") << new lc_indent;
+			log_cc(c) << L" " << new lc_type(L"IVDE") << new lc_indent;
 		}
 		inline void log_default_file_config(const wchar_t * prefix)
 		{
-			ld_file * f = new ld_file(tp::cz(L"%s%s.log", prefix, lc_pid().value(0)));
+			ld_file * f = new ld_file(tp::cz(L"%s%s.log", prefix, lc_pid().value(0).c_str()));
 			log_add_device(f, 0xFF);
-			log_cc(f) << new lc_time(L"%Y-%m-%d %H:%M:%S", true) << L" " << new lc_tid << L" " << new lc_type(L"VIDE") << new lc_indent;
+			log_cc(f) << new lc_time(L"%Y-%m-%d %H:%M:%S", true) << L" " << new lc_tid << L" " << new lc_type(L"IVDE") << new lc_indent;
+		}
+		inline void log_default_mem_config(ld_mem_log& m)
+		{
+			log_add_device(&m, 0xFF, false);
+			log_cc(&m) << new lc_time(L"%Y-%m-%d %H:%M:%S", true) << L" " << new lc_tid << L" " << new lc_type(L"VIDE") << new lc_indent;
 		}
 		inline void log_win_error(const wchar_t * prefix)
 		{

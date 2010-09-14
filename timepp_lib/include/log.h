@@ -9,8 +9,6 @@
 #include "api_wrapper.h"
 #include "lock.h"
 
-#define TP_LOG_MULTI_THREAD
-
 namespace tp
 {
 	// receives formatted log string and write them to file, console, etc...
@@ -42,26 +40,20 @@ namespace tp
 	namespace _inner
 	{
 		// singleton
+		template <typename T>
 		class logger
 		{
 		private:
+			typedef T mtlock_t;
+			typedef logger<T> mytype_t;
+			typedef autolocker<T> locker_t;
+			mtlock_t m_lock;
+			static std::auto_ptr<mytype_t> s_inst;
+
 			logger()
 			{
-#ifdef TP_LOG_MULTI_THREAD
-				::InitializeCriticalSection(&m_cs);
-#endif
 			}
-			~logger()
-			{
-				while (m_lds.size() > 0)
-				{
-					remove_device(m_lds.begin()->first);
-				}
 
-#ifdef TP_LOG_MULTI_THREAD
-				::DeleteCriticalSection(&m_cs);
-#endif
-			}
 			logger(const logger&);
 			logger& operator = (const logger&);
 
@@ -71,6 +63,7 @@ namespace tp
 				unsigned int mask;
 				lcs_t lcs;
 				bool auto_delete;
+				bool padding[3];
 			};
 
 			typedef std::map<log_device*, device_info> lds_t;
@@ -78,14 +71,27 @@ namespace tp
 			CRITICAL_SECTION m_cs;
 
 		public:
-			static logger * instance()
+			~logger()
 			{
-				static logger s_logger;
-				return &s_logger;
+				while (m_lds.size() > 0)
+				{
+					remove_device(m_lds.begin()->first);
+				}
+			}
+
+			static mytype_t& instance()
+			{
+				if (!s_inst.get())
+				{
+					s_inst.reset(new mytype_t);
+				}
+				return *s_inst.get();
 			}
 
 			void add_device(log_device * ld, unsigned int mask, bool auto_delete)
 			{
+				locker_t locker(m_lock);
+
 				device_info di;
 				di.auto_delete = auto_delete;
 				di.mask = mask;
@@ -100,6 +106,8 @@ namespace tp
 
 			void remove_device(log_device * ld)
 			{
+				locker_t locker(m_lock);
+
 				lds_t::iterator it = m_lds.find(ld);
 				if (it != m_lds.end())
 				{
@@ -117,6 +125,8 @@ namespace tp
 
 			bool add_context(log_device * ld, log_context * lc)
 			{
+				locker_t locker(m_lock);
+
 				lds_t::iterator it = m_lds.find(ld);
 				if (it != m_lds.end())
 				{
@@ -128,9 +138,8 @@ namespace tp
 
 			void log(unsigned int log_type, const wchar_t * text, bool flush = false)
 			{
-#ifdef TP_LOG_MULTI_THREAD
-				critical_lock lock(m_cs);
-#endif
+				locker_t locker(m_lock);
+
 				for (lds_t::const_iterator it = m_lds.begin(); it != m_lds.end(); ++it)
 				{
 					log_device * ld = it->first;
@@ -165,30 +174,38 @@ namespace tp
 
 		}; // class logger
 
+		template <typename T>
+		std::auto_ptr<logger<T> > logger<T>::s_inst;
 
 	} // namespace _inner
 
+#ifdef TP_LOG_SINGLETHREAD
+	typedef _inner::logger<dummy_lock> tplogger;
+#else
+	typedef _inner::logger<critical_section_lock> tplogger;
+#endif
+
 	inline void log_add_device(log_device * ld, unsigned int mask, bool auto_delete = true)
 	{
-		_inner::logger::instance()->add_device(ld, mask, auto_delete);
+		tplogger::instance().add_device(ld, mask, auto_delete);
 	}
 
 	inline void log_remove_device(log_device * ld)
 	{
-		_inner::logger::instance()->remove_device(ld);
+		tplogger::instance().remove_device(ld);
 	}
 
 	inline void log_add_context(log_device * ld, log_context * lc)
 	{
-		_inner::logger::instance()->add_context(ld, lc);
+		tplogger::instance().add_context(ld, lc);
 	}
 
 	inline void log(unsigned int log_type, const wchar_t * text, bool flush = true)
 	{
-		_inner::logger::instance()->log(log_type, text, flush);
+		tplogger::instance().log(log_type, text, flush);
 	}
 	inline void log(const wchar_t * text, bool flush = true)
 	{
-		_inner::logger::instance()->log(0, text, flush);
+		tplogger::instance().log(0, text, flush);
 	}
 };

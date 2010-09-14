@@ -28,7 +28,7 @@ template <typename T, size_t buf_size = 1024>
 class hex_dumper : public format_shim<T, buf_size>
 {
 public:
-	hex_dumper(const void * data, size_t len, size_t indent = 0, size_t bytes_per_line = 16) : m_gap(0)
+	hex_dumper(const void * data, size_t len, size_t indent = 0, size_t bytes_per_line = 16, bool show_ascii = true) : m_gap(0), m_show_ascii(show_ascii)
 	{
 		const size_t line_size = get_line_size(bytes_per_line, indent);
 		size_t line_count = (len + bytes_per_line - 1) / bytes_per_line;
@@ -38,10 +38,18 @@ public:
 
 private:
 	size_t m_gap;
+	bool m_show_ascii;
 
 	size_t get_line_size(size_t bytes_per_line, size_t indent)
 	{
-		return bytes_per_line * 4 + indent + m_gap + 1;
+		if (m_show_ascii)
+		{
+			return bytes_per_line * 4 + indent + m_gap + 1;
+		}
+		else
+		{
+			return bytes_per_line * 3 - 1 + indent + 1;
+		}
 	}
 	void _hex_dump(T * buf, const void * data, size_t len, size_t indent, size_t bytes_per_line)
 	{
@@ -60,7 +68,10 @@ private:
 				int v = (p[j] + 256) % 256;
 				line[indent + j*3] = cmap[v / 16];
 				line[indent + j*3+1] = cmap[v % 16];
-				line[indent + ascii_pos + j] = (v >= 0x20 && v <= 0x80)? static_cast<T>(v) : static_cast<T>('.');
+				if (m_show_ascii)
+				{
+					line[indent + ascii_pos + j] = (v >= 0x20 && v <= 0x80)? static_cast<T>(v) : static_cast<T>('.');
+				}
 			}
 			line[line_size - 1] = '\n';
 		}

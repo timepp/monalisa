@@ -4,6 +4,12 @@
 #include "format_shim.h"
 #include "opblock.h"
 
+#ifdef NE
+#pragma warning("conflict: NE already defined")
+#else
+#define NE(statment1, statment2) try { statment1; } catch (...) { statment2; }
+#endif
+
 namespace tp
 {
 	struct error
@@ -50,28 +56,35 @@ namespace tp
 		}
 	};
 
-	void throw_winerr_when(bool cond)
+	inline void throw_winerr_when(bool cond)
 	{
 		if (cond) 
 		{
 			throw tp::exception(new tp::error_win(GetLastError()));
 		}
 	}
-	void throw_stderr_when(bool cond)
+	inline void throw_if_lasterror(LONG err)
+	{
+		if (err != 0)
+		{
+			throw tp::exception(new tp::error_win(err));
+		}
+	}
+	inline void throw_stderr_when(bool cond)
 	{
 		if (cond)
 		{
 			throw tp::exception(new tp::error_std(errno));
 		}
 	}
-	void throw_when_fail(HRESULT hr)
+	inline void throw_when_fail(HRESULT hr)
 	{
 		if (FAILED(hr))
 		{
 			throw tp::exception(new tp::error_com(hr));
 		}
 	}
-	void throw_when(bool cond, const wchar_t* msg)
+	inline void throw_when(bool cond, const wchar_t* msg)
 	{
 		if (cond)
 		{

@@ -15,6 +15,23 @@ namespace tp
 		LCID_PID = 16,
 	};
 
+	class tls_value
+	{
+	public:
+		tls_value()	{ m_index = TlsAlloc();	}
+		~tls_value(){ TlsFree(m_index);	}
+		int get() const
+		{
+			return reinterpret_cast<int>(TlsGetValue(m_index));
+		}
+		bool set(int new_val)
+		{
+			return TlsSetValue(m_index, reinterpret_cast<LPVOID>(new_val)) == TRUE;
+		}
+	private:
+		DWORD m_index;
+	};
+
 class lc_time : public log_context
 {
 public:
@@ -46,6 +63,7 @@ public:
 private:
 	std::wstring m_time_fmt;
 	bool m_show_millisec;
+	bool padding[3];
 };
 
 class lc_text : public log_context
@@ -85,22 +103,7 @@ private:
 class lc_indent : public log_context
 {
 private:
-	class tls_value
-	{
-	public:
-		tls_value()	{ m_index = TlsAlloc();	}
-		~tls_value(){ TlsFree(m_index);	}
-		int get() const
-		{
-			return reinterpret_cast<int>(TlsGetValue(m_index));
-		}
-		bool set(int new_val)
-		{
-			return TlsSetValue(m_index, reinterpret_cast<LPVOID>(new_val)) == TRUE;
-		}
-	private:
-		DWORD m_index;
-	};
+
 	static tls_value& tls_val()
 	{
 		static tls_value s_tv;

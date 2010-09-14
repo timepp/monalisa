@@ -1,4 +1,6 @@
-#pragma once
+#ifndef TP_AUTO_RELEASE_H_INCLUDED
+#define TP_AUTO_RELEASE_H_INCLUDED
+
 #include "defs.h"
 
 // ----------------------------------------------------------------------------
@@ -41,70 +43,4 @@
 	} LINE_NAME(olv_)(var1, var2, var3, var4);
 
 
-namespace tp
-{
-
-namespace _inner
-{
-
-	template <template <typename> class V, typename T>
-	V<T> creator_helper(T t)
-	{
-		return V<T>(t);
-	}
-
-	template <typename T1>
-	struct type_trait
-	{
-		typedef T1 arg_type;
-	};
-
-	// call_on_ret_base
-	struct call_on_ret_base
-	{
-		mutable bool is_runner;
-		call_on_ret_base() : is_runner(true) {}
-		call_on_ret_base(const call_on_ret_base& cor) : is_runner(true)
-		{
-			cor.is_runner = false;
-		}
-	};
-
-	template <typename T>
-	struct cor : public call_on_ret_base
-	{
-		T _1;
-		cor(T v) : _1(v) {}
-		cor(const cor& c) : call_on_ret_base(c) {}
-		~cor()
-		{
-			fclose(_1);
-		}
-	};
-
-// call_on_ret
-template <typename F, typename P>
-struct call_on_ret : call_on_ret_base
-{
-        mutable F m_fun_ptr;               // 资源释放函数
-        P m_param;                         // 资源
-        call_on_ret(F f, P p) : m_fun_ptr(f), m_param(p) {}
-        call_on_ret(const call_on_ret& c)
-                : m_fun_ptr(c.m_fun_ptr), m_param(c.m_param)
-        {
-                c.m_fun_ptr = 0;
-        }
-        ~call_on_ret()
-        {
-                if (m_fun_ptr) m_fun_ptr(m_param);
-        }
-};
-template <typename F, typename P>
-call_on_ret<F, P> f_coe(F f, P p)
-{
-        return call_on_ret<F, P>(f, p);
-}
-
-} // namespace _inner
-
-} // namespace tp
+#endif
