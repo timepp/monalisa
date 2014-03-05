@@ -1,8 +1,14 @@
 ﻿#include <windows.h>
 
 #define SMNAME L"ELE{8A7A7823-C4B2-4F5A-84DA-11C1B6451AD7}"
-#define SMSIZE 65536
 #define PROGNAME L"ELE"
+
+struct SharedData
+{
+    WCHAR szCommandLine[4096];
+    WCHAR szWorkingDir[MAX_PATH];
+    WCHAR szEnvironmentBlock[65536];
+};
 
 void Check(BOOL bCondition)
 {
@@ -32,7 +38,7 @@ LPWSTR GetParamPos(LPWSTR lpCmdLine)
 	return lpCmdLine;
 }
 
-void ShExecute(LPCWSTR pVerb, LPCWSTR pPath, LPCWSTR pParam, LPCWSTR pDir, BOOL bWaitExit)
+void ExecuteAndWait(LPCWSTR pVerb, LPCWSTR pPath, LPCWSTR pParam, LPCWSTR pDir, BOOL bWaitExit)
 {
 	SHELLEXECUTEINFOW sei;
 	sei.hwnd = NULL;
@@ -52,6 +58,7 @@ void ShExecute(LPCWSTR pVerb, LPCWSTR pPath, LPCWSTR pParam, LPCWSTR pDir, BOOL 
 	//::CloseHandle(sei.hProcess);
 }
 
+
 int Ele()
 {
 	LPWSTR lpCmd = GetParamPos(::GetCommandLineW());
@@ -60,14 +67,26 @@ int Ele()
 		// get CD and command from shared memory
 		HANDLE hMapping = ::OpenFileMappingW(FILE_MAP_READ|FILE_MAP_WRITE, FALSE, SMNAME);
 		Check(hMapping != NULL);
-		LPVOID pAddr = ::MapViewOfFile(hMapping, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, SMSIZE);
+		LPVOID pAddr = ::MapViewOfFile(hMapping, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, sizeof(SharedData));
 		Check(pAddr != NULL);
-		LPWSTR pDir = (LPWSTR)pAddr;
-		lpCmd = pDir + MAX_PATH;
-		LPWSTR pParam = GetParamPos(lpCmd);
-		if (*pParam) pParam[-1] = L'\0';
 
-		ShExecute(L"open", lpCmd, pParam, pDir, FALSE);
+        SharedData *pData = static_cast<SharedData*>(pAddr);
+
+        STARTUPINFO si = {};
+        PROCESS_INFORMATION pi = {};
+        si.cb = sizeof(si);
+        ::CreateProcessW(
+            NULL, 
+            pData->szCommandLine, 
+            NULL, 
+            NULL, 
+            FALSE, 
+            CREATE_UNICODE_ENVIRONMENT, 
+            pData->szEnvironmentBlock, 
+            pData->szWorkingDir,
+            &si,
+            &pi
+            );
 	}
 	else if (!*lpCmd)
 	{
@@ -77,7 +96,7 @@ int Ele()
 			L"用法：\n"
 			L"ele <要运行的程序名> <程序参数>\n"
 			L"\n"
-			L"VERSION: 1.0\n" 
+			L"VERSION: 2.0\n" 
 			,PROGNAME, MB_OK|MB_ICONINFORMATION);
 	}
 	else
@@ -88,16 +107,33 @@ int Ele()
 		lstrcpyW(szPath + dwPathLen, L"\\ele59.dat");
 		HANDLE hFile = ::CreateFileW(szPath, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		Check(hFile != INVALID_HANDLE_VALUE);
-		HANDLE hMapping = ::CreateFileMappingW(hFile, NULL, PAGE_READWRITE, 0, SMSIZE, SMNAME);
+		HANDLE hMapping = ::CreateFileMappingW(hFile, NULL, PAGE_READWRITE, 0, sizeof(SharedData), SMNAME);
 		Check(hMapping != NULL);
-		LPVOID pAddr = ::MapViewOfFile(hMapping, FILE_MAP_WRITE, 0, 0, SMSIZE);
+		LPVOID pAddr = ::MapViewOfFile(hMapping, FILE_MAP_WRITE, 0, 0, sizeof(SharedData));
 		Check(pAddr != NULL);
-		::GetCurrentDirectoryW(MAX_PATH, (LPWSTR)pAddr);
-		lstrcpyW((LPWSTR)pAddr + MAX_PATH, lpCmd);
+
+        SharedData *pData = static_cast<SharedData*>(pAddr);
+        ::GetCurrentDirectoryW(_countof(pData->szWorkingDir), pData->szWorkingDir);
+		lstrcpyW(pData->szCommandLine, lpCmd);
+
+        PCWSTR pszEnv = GetEnvironmentStringsW();
+        for (size_t i = 0; i < _countof(pData->szEnvironmentBlock); i++)
+        {
+            if (pszEnv[i] == L'\0' && pszEnv[i + 1] == L'\0')
+            {
+                pData->szEnvironmentBlock[i] = L'\0';
+                pData->szEnvironmentBlock[i+1] = L'\0';
+                break;
+            }
+            else
+            {
+                pData->szEnvironmentBlock[i] = pszEnv[i];
+            }
+        }
 
 		// restart in UAC
 		::GetModuleFileNameW(NULL, szPath, MAX_PATH);
-		ShExecute(L"runas", szPath, L"UAC", NULL, TRUE);
+        ExecuteAndWait(L"runas", szPath, L"UAC", NULL, TRUE);
 /*
 		::UnmapViewOfFile(pAddr);
 		::CloseHandle(hMapping);
